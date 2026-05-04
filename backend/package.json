@@ -1,0 +1,25 @@
+{
+  "name": "event-backend",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "AvatarN03",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
+    "@prisma/client": "^7.8.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "imagekit": "^6.0.0",
+    "prisma": "^7.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
