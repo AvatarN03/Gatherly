@@ -11,3 +11,70 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id          String              @id @default(uuid())
+  clerkUserId String              @unique
+  email       String
+  name        String
+  createdAt   DateTime            @default(now())
+  updatedAt DateTime @updatedAt
+  
+  imageUrl    String
+  communities Community[]         @relation("UserCommunities")
+  membership  Membership[]
+  requests    MembershipRequest[]
+}
+
+model Community {
+  id          String              @id @default(uuid())
+  name        String
+  description String
+  imageUrl    String
+  location    String
+  createdById String
+  createdBy   User                @relation("UserCommunities", fields: [createdById], references: [id])
+  members     Membership[]
+  requests    MembershipRequest[]
+  createdAt   DateTime            @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Membership {
+  id          String @id @default(uuid())
+  userId      String
+  communityId String
+
+  user      User      @relation(fields: [userId], references: [id])
+  community Community @relation(fields: [communityId], references: [id])
+
+  role      CommunityRole @default(MEMBER)
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, communityId])
+}
+
+model MembershipRequest {
+  id          String @id @default(uuid())
+  userId      String
+  communityId String
+
+  user      User      @relation(fields: [userId], references: [id])
+  community Community @relation(fields: [communityId], references: [id])
+
+  proofUrl  String
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+}
+
+enum CommunityRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
