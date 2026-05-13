@@ -10,6 +10,8 @@ router.post("/", authMiddleware, createCommunity);
 
 router.get("/:id", getCommunityById);
 
+
+
 router.get("/:id/verify", verifyCommunity);
 
 router.delete("/:id", authMiddleware, deleteCommunity)

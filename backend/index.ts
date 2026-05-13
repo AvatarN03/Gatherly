@@ -4,11 +4,13 @@ import cors from "cors";
 import userRoutes from "./routes/user.routes.ts";
 import communityRoutes from "./routes/community.routes.ts";
 import membershipRoutes from "./routes/membership.routes.ts";
+import { clerkMiddleware } from "@clerk/express";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(clerkMiddleware());
 
 
 app.use("/api/users", userRoutes);

@@ -1,55 +1,67 @@
 import type { NextFunction, Request, Response } from "express";
+import { clerkClient, getAuth } from "@clerk/express";
+import { prisma } from "../utils/prisma.ts";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: { id: string };
+      user?: {
+        id: string;
+        clerkUserId: string;
+      };
     }
   }
 }
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-console.log("Auth middleware called");
-  const user = req.get("user-id"); 
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId: clerkUserId } = getAuth(req);
 
-//   if (!user) {
-//     return res.status(401).json({ error: "Unauthorized" });
-//   }
-// import { getAuth } from "@clerk/express";
+    if (!clerkUserId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
 
-// export const authMiddleware = async (req, res, next) => {
-//   const { userId: clerkUserId } = getAuth(req);
+    // Check existing user
+    let user = await prisma.user.findUnique({
+      where: {
+        clerkUserId,
+      },
+    });
 
-//   if (!clerkUserId) {
-//     return res.status(401).json({ error: "Unauthorized" });
-//   }
+    // Create user first time login
+    if (!user) {
+      // Fetch Clerk user
+      const clerkUser = await clerkClient.users.getUser(clerkUserId);
 
-//   // 🔥 Find user in DB
-//   let user = await prisma.user.findUnique({
-//     where: { clerkUserId },
-//   });
+      user = await prisma.user.create({
+        data: {
+          clerkUserId,
+          email:
+            clerkUser.emailAddresses[0]?.emailAddress || "",
 
-//   // 🔁 Sync if not exists
-//   if (!user) {
-//     user = await prisma.user.create({
-//       data: {
-//         clerkUserId,
-//         email: "temp@email.com", // later fetch from Clerk
-//         name: "New User",
-//         imageUrl: "",
-//       },
-//     });
-//   }
+          name:
+            `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
 
-//   // ✅ Attach DB user
-//   req.user = {
-//     id: user.id,           // DB UUID
-//     clerkUserId,
-//   };
+          imageUrl:
+            clerkUser.imageUrl || "",
+        },
+      });
+    }
 
-//   next();
-// };
+    // Attach DB user
+    req.user = {
+      id: user.id,
+      clerkUserId: user.clerkUserId,
+    };
 
-  req.user = { id: "d2a08f04-1a72-457b-baaa-1185862950ad" }; // attach user to request
-  next();
+    next();
+  } catch (error) {
+    next(error);
+  }
 };
