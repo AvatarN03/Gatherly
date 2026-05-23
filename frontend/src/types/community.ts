@@ -51,7 +51,7 @@ export interface CreateCommunityDto {
   location: string
 }
 
-export interface UpdateCommunityDto extends Partial<CreateCommunityDto> {}
+export type UpdateCommunityDto = Partial<CreateCommunityDto>
 
 export interface VerifyCommunityResponse {
   message: string

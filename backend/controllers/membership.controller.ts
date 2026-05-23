@@ -1,19 +1,22 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma.ts";
 
-export const joinCommunity = async (req: Request, res: Response) => {
+export const joinCommunity = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
     const { id: communityId } = req.params;
-    const userId = req?.user?.id;
+    const user = req?.user;
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     //check if user is already a member or has a pending request
     const existingMembership = await prisma.membership.findFirst({
       where: {
-        AND: [{ userId }, { communityId }],
+        AND: [{ userId: user.id }, { communityId }],
       },
     });
 
@@ -24,7 +27,7 @@ export const joinCommunity = async (req: Request, res: Response) => {
     //check if user has a pending request
     const existingRequest = await prisma.membershipRequest.findFirst({
       where: {
-        userId,
+        userId: user.id,
         communityId,
         status: "PENDING",
       },
@@ -36,7 +39,7 @@ export const joinCommunity = async (req: Request, res: Response) => {
 
     const request = await prisma.membershipRequest.create({
       data: {
-        userId,
+        userId: user.id,
         communityId,
         proofUrl: "demo-proof", // you can update later
       },
@@ -48,9 +51,12 @@ export const joinCommunity = async (req: Request, res: Response) => {
   }
 };
 
-export const getMembers = async (req: Request, res: Response) => {
+export const getMembers = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
-    const communityId = req.params.id;
+    const { id: communityId } = req.params;
 
     const members = await prisma.membership.findMany({
       where: { communityId },
@@ -70,18 +76,21 @@ export const getMembers = async (req: Request, res: Response) => {
   }
 };
 
-export const leaveCommunity = async (req: Request, res: Response) => {
+export const leaveCommunity = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
-    const userId = req?.user?.id;
-    const communityId = req.params.id;
+    const user = req?.user;
+    const { id: communityId } = req.params;
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const membership = await prisma.membership.findUnique({
       where: {
-        userId_communityId: { userId, communityId },
+        userId_communityId: { userId: user.id, communityId },
       },
     });
 
@@ -91,12 +100,14 @@ export const leaveCommunity = async (req: Request, res: Response) => {
 
     // Optional: prevent owner from leaving
     if (membership.role === "OWNER") {
-      return res.status(400).json({ error: "Owner cannot leave the community" });
+      return res
+        .status(400)
+        .json({ error: "Owner cannot leave the community" });
     }
 
     await prisma.membership.delete({
       where: {
-        userId_communityId: { userId, communityId },
+        userId_communityId: { userId: user.id, communityId },
       },
     });
 
@@ -107,19 +118,22 @@ export const leaveCommunity = async (req: Request, res: Response) => {
 };
 
 //only owner/admin
-export const getCommunityRequests = async (req: Request, res: Response) => {
+export const getCommunityRequests = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
-    const userId = req?.user?.id;
-    const communityId = req.params.id;
+    const user = req?.user;
+    const { id: communityId } = req.params;
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     // 🔐 Check if requester is OWNER/ADMIN
     const membership = await prisma.membership.findUnique({
       where: {
-        userId_communityId: { userId, communityId },
+        userId_communityId: { userId: user.id, communityId },
       },
     });
 
@@ -143,16 +157,15 @@ export const getCommunityRequests = async (req: Request, res: Response) => {
   }
 };
 
-
-export const handleRequest = async (req: Request, res: Response) => {
+export const handleRequest = async (req: Request<{ requestId: string }>, res: Response) => {
   console.log("Handle request called");
 
   try {
-    const userId = req?.user?.id;
+    const user = req?.user;
     const { requestId } = req.params;
     const { status } = req.body;
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -178,7 +191,7 @@ export const handleRequest = async (req: Request, res: Response) => {
     const membership = await prisma.membership.findUnique({
       where: {
         userId_communityId: {
-          userId,
+          userId: user.id,
           communityId: request.communityId,
         },
       },

@@ -12,60 +12,187 @@ datasource db {
   provider = "postgresql"
 }
 
+// =========================
+// User
+// =========================
+
 model User {
-  id          String              @id @default(uuid())
-  clerkUserId String              @unique
-  email       String
-  name        String
-  createdAt   DateTime            @default(now())
+  id        String   @id
+  email     String   @unique
+  name      String
+  imageUrl  String
+
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  imageUrl    String
-  communities Community[]         @relation("UserCommunities")
-  membership  Membership[]
-  requests    MembershipRequest[]
+
+  // Communities created by user
+  communitiesCreated Community[] @relation("UserCommunities")
+
+  // Community memberships
+  memberships Membership[]
+
+  // Community join requests
+  membershipRequests MembershipRequest[]
+
+  // Events created by user
+  eventsCreated Event[]
+
+  // Assigned event roles
+  eventAssignments EventMember[]
+
+  // Registered events
+  eventRegistrations EventRegistration[]
 }
 
+// =========================
+// Community
+// =========================
+
 model Community {
-  id          String              @id @default(uuid())
+  id          String @id @default(uuid())
+
   name        String
   description String
   imageUrl    String
   location    String
+
   createdById String
-  createdBy   User                @relation("UserCommunities", fields: [createdById], references: [id])
-  members     Membership[]
-  requests    MembershipRequest[]
-  createdAt   DateTime            @default(now())
+  createdBy   User @relation("UserCommunities", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Approved members
+  members Membership[]
+
+  // Pending join requests
+  requests MembershipRequest[]
+
+  // Community events
+  events Event[]
 }
 
+// =========================
+// Community Membership
+// =========================
+
 model Membership {
-  id          String @id @default(uuid())
+  id String @id @default(uuid())
+
   userId      String
   communityId String
 
   user      User      @relation(fields: [userId], references: [id])
   community Community @relation(fields: [communityId], references: [id])
 
-  role      CommunityRole @default(MEMBER)
-  createdAt DateTime      @default(now())
+  role CommunityRole @default(MEMBER)
+
+  createdAt DateTime @default(now())
 
   @@unique([userId, communityId])
 }
 
+// =========================
+// Membership Requests
+// =========================
+
 model MembershipRequest {
-  id          String @id @default(uuid())
+  id String @id @default(uuid())
+
   userId      String
   communityId String
 
   user      User      @relation(fields: [userId], references: [id])
   community Community @relation(fields: [communityId], references: [id])
 
-  proofUrl  String
-  status    RequestStatus @default(PENDING)
-  createdAt DateTime      @default(now())
+  proofUrl String?
+
+  status RequestStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, communityId])
 }
+
+// =========================
+// Event
+// =========================
+
+model Event {
+  id String @id @default(uuid())
+
+  title       String
+  description String
+  date        DateTime
+  location    String
+
+  imageUrl String?
+
+  // Community relation
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id])
+
+  // Event creator/admin
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Assigned coordinators/speakers/hosts
+  members EventMember[]
+
+  // Registered attendees
+  registrations EventRegistration[]
+}
+
+// =========================
+// Event Members
+// Assigned by admin
+// Visible on event page
+// =========================
+
+model EventMember {
+  id String @id @default(uuid())
+
+  eventId String
+  userId  String
+
+  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  // host, speaker, coordinator
+  role EventMemberRole @default(COORDINATOR)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+}
+
+// =========================
+// Event Registration
+// Users registering for event
+// =========================
+
+model EventRegistration {
+  id String @id @default(uuid())
+
+  eventId String
+  userId  String
+
+  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  status RegistrationStatus @default(PENDING)
+
+  registeredAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+}
+
+// =========================
+// Enums
+// =========================
 
 enum CommunityRole {
   OWNER
@@ -77,4 +204,18 @@ enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum EventMemberRole {
+  HOST
+  SPEAKER
+  COORDINATOR
+  VOLUNTEER
 }

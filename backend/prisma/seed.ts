@@ -1,36 +1,38 @@
 import { prisma } from "../utils/prisma.ts";
 
-
 async function main() {
   // 🔹 Create Users
   const users = await Promise.all([
     prisma.user.create({
       data: {
-        clerkUserId: "clerk_1",
+        id: "user_1",
         email: "user1@test.com",
         name: "User One",
         imageUrl: "",
       },
     }),
+
     prisma.user.create({
       data: {
-        clerkUserId: "clerk_2",
+        id: "user_2",
         email: "user2@test.com",
         name: "User Two",
         imageUrl: "",
       },
     }),
+
     prisma.user.create({
       data: {
-        clerkUserId: "clerk_3",
+        id: "user_3",
         email: "user3@test.com",
         name: "User Three",
         imageUrl: "",
       },
     }),
+
     prisma.user.create({
       data: {
-        clerkUserId: "clerk_4",
+        id: "user_4",
         email: "user4@test.com",
         name: "User Four",
         imageUrl: "",
@@ -49,6 +51,7 @@ async function main() {
         createdById: users[0].id,
       },
     }),
+
     prisma.community.create({
       data: {
         name: "Sports Club",
@@ -58,6 +61,7 @@ async function main() {
         createdById: users[1].id,
       },
     }),
+
     prisma.community.create({
       data: {
         name: "Music Group",
@@ -78,6 +82,7 @@ async function main() {
         role: "OWNER",
       },
     }),
+
     prisma.membership.create({
       data: {
         userId: users[1].id,
@@ -85,6 +90,7 @@ async function main() {
         role: "OWNER",
       },
     }),
+
     prisma.membership.create({
       data: {
         userId: users[2].id,
@@ -94,7 +100,7 @@ async function main() {
     }),
   ]);
 
-  // 🔹 Create Some Join Requests
+  // 🔹 Create Membership Requests
   await prisma.membershipRequest.createMany({
     data: [
       {
@@ -102,6 +108,7 @@ async function main() {
         communityId: communities[0].id,
         proofUrl: "proof1",
       },
+
       {
         userId: users[2].id,
         communityId: communities[1].id,

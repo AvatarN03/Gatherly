@@ -4,6 +4,7 @@ import cors from "cors";
 import userRoutes from "./routes/user.routes.ts";
 import communityRoutes from "./routes/community.routes.ts";
 import membershipRoutes from "./routes/membership.routes.ts";
+import eventRoutes from "./routes/event.routes.ts";
 import { clerkMiddleware } from "@clerk/express";
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(clerkMiddleware());
 app.use("/api/users", userRoutes);
 app.use("/api/communities", communityRoutes);
 app.use("/api/memberships", membershipRoutes);
+app.use("/api/events", eventRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Community Management API");

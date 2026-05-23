@@ -4,9 +4,9 @@ import { prisma } from "../utils/prisma.ts";
 export const createCommunity = async (req: Request, res: Response) => {
   try {
     const { name, description, imageUrl, location } = req.body;
-    const userId = req?.user?.id;
+    const user= req?.user;
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -16,7 +16,7 @@ export const createCommunity = async (req: Request, res: Response) => {
         description,
         imageUrl,
         location,
-        createdById: userId,
+        createdById: user.id,
       },
     });
     console.log("check2");
@@ -37,12 +37,15 @@ export const getCommunities = async (req: Request, res: Response) => {
         mode: "insensitive",
       },
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   res.json(communities);
 };
 
-export const getCommunityById = async (req: Request, res: Response) => {
+export const getCommunityById = async (req: Request<{id:string}>, res: Response) => {
   const { id } = req.params;
   const community = await prisma.community.findUnique({
     where: { id },
@@ -58,7 +61,7 @@ export const getCommunityById = async (req: Request, res: Response) => {
   res.json(community);
 };
 
-export const verifyCommunity = async (req: Request, res: Response) => {
+export const verifyCommunity = async (req: Request<{id:string}>, res: Response) => {
   const { id } = req.params;
   const community = await prisma.community.findUnique({
     where: { id },
@@ -71,7 +74,7 @@ export const verifyCommunity = async (req: Request, res: Response) => {
   res.json({ message: "Community exists" });
 };
 
-export const updateCommunity = async (req: Request, res: Response) => {
+export const updateCommunity = async (req: Request<{id:string}>, res: Response) => {
   const { id } = req.params;
   const { name, description, imageUrl, location } = req.body;
 
@@ -91,10 +94,10 @@ export const updateCommunity = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteCommunity = async (req: Request, res: Response) => {
+export const deleteCommunity = async (req: Request<{id:string}>, res: Response) => {
   const { id } = req.params;
-  const userId = req?.user?.id;
-  console.log("User ID from auth middleware:", userId);
+  const user = req?.user;
+  console.log("User ID from auth middleware:", user?.id);
 
   try {
     const community = await prisma.community.findUnique({
@@ -106,7 +109,7 @@ export const deleteCommunity = async (req: Request, res: Response) => {
     }
 
     // 🔐 Authorization check
-    if (community.createdById !== userId) {
+    if (community.createdById !== user.id) {
       return res
         .status(403)
         .json({ error: "Not authorized to delete this community" });

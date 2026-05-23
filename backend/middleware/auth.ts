@@ -5,10 +5,12 @@ import { prisma } from "../utils/prisma.ts";
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        clerkUserId: string;
-      };
+      user:{
+            id: string;
+            email: string;
+            name?: string | null;
+            imageUrl?: string | null;
+          }
     }
   }
 }
@@ -19,9 +21,9 @@ export const authMiddleware = async (
   next: NextFunction
 ) => {
   try {
-    const { userId: clerkUserId } = getAuth(req);
+    const { userId } = getAuth(req);
 
-    if (!clerkUserId) {
+    if (!userId) {
       return res.status(401).json({
         error: "Unauthorized",
       });
@@ -30,18 +32,18 @@ export const authMiddleware = async (
     // Check existing user
     let user = await prisma.user.findUnique({
       where: {
-        clerkUserId,
+        id: userId,
       },
     });
 
     // Create user first time login
     if (!user) {
       // Fetch Clerk user
-      const clerkUser = await clerkClient.users.getUser(clerkUserId);
+      const clerkUser = await clerkClient.users.getUser(userId);
 
       user = await prisma.user.create({
         data: {
-          clerkUserId,
+          id: userId,
           email:
             clerkUser.emailAddresses[0]?.emailAddress || "",
 
@@ -54,11 +56,8 @@ export const authMiddleware = async (
       });
     }
 
-    // Attach DB user
-    req.user = {
-      id: user.id,
-      clerkUserId: user.clerkUserId,
-    };
+    // Attach DB user (include basic profile fields)
+    req.user = user;
 
     next();
   } catch (error) {
