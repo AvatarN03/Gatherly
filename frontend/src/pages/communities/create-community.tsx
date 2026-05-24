@@ -2,18 +2,27 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateCommunityMutation } from '../../hooks/useCommunities'
 import type { CreateCommunityDto } from '../../types'
+import { COMMUNITY_CATEGORIES } from '../../constant'
 
 const CreateCommunity = () => {
   const navigate = useNavigate()
   const createMutation = useCreateCommunityMutation()
   const [errors, setErrors] = useState<Partial<CreateCommunityDto>>({})
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   const [formData, setFormData] = useState<CreateCommunityDto>({
     name: '',
     description: '',
-    imageUrl: '',
     location: '',
+    category: 'General', // default category
   })
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+    setErrors((prev) => ({ ...prev, imageUrl: undefined }))
+  }
 
   const validateForm = (): boolean => {
     const newErrors: Partial<CreateCommunityDto> = {}
@@ -24,9 +33,7 @@ const CreateCommunity = () => {
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required'
     }
-    if (!formData.imageUrl.trim()) {
-      newErrors.imageUrl = 'Image URL is required'
-    }
+
     if (!formData.location.trim()) {
       newErrors.location = 'Location is required'
     }
@@ -35,35 +42,38 @@ const CreateCommunity = () => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // 1. Extend handleChange to also handle <select>
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    // Clear error for this field when user starts typing
+    setFormData((prev) => ({ ...prev, [name]: value }))
     if (errors[name as keyof CreateCommunityDto]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }))
+      setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    if (!validateForm()) {
-      return
+  if (!validateForm()) return
+
+  try {
+    const payload = new FormData()
+    payload.append('name', formData.name)
+    payload.append('description', formData.description)
+    payload.append('location', formData.location)
+    payload.append('category', formData.category)
+    if (imageFile) {
+      payload.append('image', imageFile) // key must match what your backend expects
     }
 
-    try {
-      await createMutation.mutateAsync(formData)
-      navigate('/communities')
-    } catch (error) {
-      console.error('Failed to create community:', error)
-    }
+    await createMutation.mutateAsync(payload)
+    navigate('/communities')
+  } catch (error) {
+    console.error('Failed to create community:', error)
   }
+}
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -114,29 +124,22 @@ const CreateCommunity = () => {
 
             {/* Image URL */}
             <div>
-              <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                Image URL *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Image *</label>
               <input
-                type="url"
-                id="imageUrl"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
-              {errors.imageUrl && <p className="text-red-500 text-sm mt-1">{errors.imageUrl}</p>}
-              {formData.imageUrl && (
+              {/* local preview using the file reference */}
+              {imageFile && (
                 <img
-                  src={formData.imageUrl}
+                  src={URL.createObjectURL(imageFile)}
                   alt="Preview"
                   className="mt-2 h-32 w-full object-cover rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
                 />
               )}
+  
             </div>
 
             {/* Location */}
@@ -155,6 +158,30 @@ const CreateCommunity = () => {
               />
               {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
             </div>
+            {/* Category — paste this block after the Location field */}
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                Category *
+              </label>
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white"
+              >
+                {COMMUNITY_CATEGORIES.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              {errors.category && (
+                <p className="text-red-500 text-sm mt-1">{errors.category}</p>
+              )}
+            </div>
+
+
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">

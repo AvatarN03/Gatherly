@@ -1,12 +1,10 @@
 import type { Request, Response } from "express";
 import { prisma } from "../utils/prisma.ts";
+import { CustomRequest } from "../types/index.ts";
 
-// ==================
-// Create Event
-// ==================
-export const createEvent = async (req: Request, res: Response) => {
+export const createEvent = async (req: CustomRequest, res: Response) => {
   try {
-    const { title, description, date, location, imageUrl, communityId } =
+    const { title, description, date, location, category,subCategory, communityId } =
       req.body;
     const user = req?.user;
 
@@ -29,7 +27,10 @@ export const createEvent = async (req: Request, res: Response) => {
         description,
         date: new Date(date),
         location,
-        imageUrl,
+        category,
+        subCategory,
+        imageUrl : req.imageUrl || "",
+        imageFileId: req.imageFileId,
         communityId,
         createdById: user.id,
       },
@@ -54,9 +55,7 @@ export const createEvent = async (req: Request, res: Response) => {
   }
 };
 
-// ==================
-// Get All Events
-// ==================
+
 export const getEvents = async (req: Request, res: Response) => {
   try {
     const { communityId, search } = req.query;
@@ -108,12 +107,10 @@ export const getEvents = async (req: Request, res: Response) => {
   }
 };
 
-// ==================
-// Get Event By ID
-// ==================
+
 export const getEventById = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -175,16 +172,14 @@ export const getEventById = async (
   }
 };
 
-// ==================
-// Update Event
-// ==================
+
 export const updateEvent = async (
-  req: Request<{ id: string }>,
-  res: Response
+  req: CustomRequest,
+  res: Response,
 ) => {
   try {
-    const { id } = req.params;
-    const { title, description, date, location, imageUrl } = req.body;
+    const { id } = req.params as { id: string };
+    const { title, description, date, location, category } = req.body;
     const user = req?.user;
 
     if (!user) {
@@ -201,7 +196,9 @@ export const updateEvent = async (
 
     // Authorization check - only creator can update
     if (event.createdById !== user.id) {
-      return res.status(403).json({ error: "Not authorized to update this event" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to update this event" });
     }
 
     const updatedEvent = await prisma.event.update({
@@ -211,7 +208,7 @@ export const updateEvent = async (
         description,
         date: date ? new Date(date) : undefined,
         location,
-        imageUrl,
+        imageUrl: req.imageUrl || event.imageUrl,
       },
       include: {
         createdBy: {
@@ -240,12 +237,10 @@ export const updateEvent = async (
   }
 };
 
-// ==================
-// Delete Event
-// ==================
+
 export const deleteEvent = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -265,7 +260,9 @@ export const deleteEvent = async (
 
     // Authorization check - only creator can delete
     if (event.createdById !== user.id) {
-      return res.status(403).json({ error: "Not authorized to delete this event" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this event" });
     }
 
     await prisma.event.delete({
@@ -279,12 +276,10 @@ export const deleteEvent = async (
   }
 };
 
-// ==================
-// Register for Event
-// ==================
+
 export const registerForEvent = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -313,7 +308,9 @@ export const registerForEvent = async (
     });
 
     if (existingRegistration) {
-      return res.status(400).json({ error: "Already registered for this event" });
+      return res
+        .status(400)
+        .json({ error: "Already registered for this event" });
     }
 
     const registration = await prisma.eventRegistration.create({
@@ -346,12 +343,10 @@ export const registerForEvent = async (
   }
 };
 
-// ==================
-// Unregister from Event
-// ==================
+
 export const unregisterFromEvent = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -392,7 +387,7 @@ export const unregisterFromEvent = async (
 // ==================
 export const addEventMember = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -439,7 +434,9 @@ export const addEventMember = async (
     res.status(201).json(member);
   } catch (error: any) {
     if (error.code === "P2002") {
-      return res.status(400).json({ error: "User is already a member of this event" });
+      return res
+        .status(400)
+        .json({ error: "User is already a member of this event" });
     }
     console.error("Error adding event member:", error);
     res.status(500).json({ error: "Failed to add event member" });
@@ -451,7 +448,7 @@ export const addEventMember = async (
 // ==================
 export const removeEventMember = async (
   req: Request<{ id: string; memberId: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id, memberId } = req.params;
@@ -492,7 +489,7 @@ export const removeEventMember = async (
 // ==================
 export const getEventMembers = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -523,7 +520,7 @@ export const getEventMembers = async (
 // ==================
 export const getEventRegistrations = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -567,4 +564,4 @@ export const getEventRegistrations = async (
     console.error("Error fetching event registrations:", error);
     res.status(500).json({ error: "Failed to fetch event registrations" });
   }
-}
+};

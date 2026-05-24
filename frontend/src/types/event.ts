@@ -7,4 +7,7 @@ export type EventItem = {
   description: string
   communityId: string
   imageUrl?: string
+  imageFileId?: string
+  category: string
+  subCategory: string
 }

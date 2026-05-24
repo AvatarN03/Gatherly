@@ -1,0 +1,18 @@
+export const COMMUNITY_CATEGORIES = [
+  { value: "General", label: "General" },
+  { value: "Sports", label: "Sports" },
+  { value: "Education", label: "Education" },
+  { value: "Technology", label: "Technology" },
+  { value: "Art & Culture", label: "Art & Culture" },
+  { value: "Business", label: "Business" },
+  { value: "Health & Wellness", label: "Health & Wellness" },
+  { value: "Travel", label: "Travel" },
+  { value: "Food & Cooking", label: "Food & Cooking" },
+  { value: "Music", label: "Music" },
+  { value: "Photography", label: "Photography" },
+  { value: "Gaming", label: "Gaming" },
+  { value: "Books & Literature", label: "Books & Literature" },
+  { value: "Movies & TV", label: "Movies & TV" },
+  { value: "Social", label: "Social" },
+  { value: "Other", label: "Other" },
+];

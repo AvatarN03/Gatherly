@@ -53,7 +53,9 @@ model Community {
 
   name        String
   description String
-  imageUrl    String
+  imageUrl    String?
+  imageFileId String?
+  category    String
   location    String
 
   createdById String
@@ -127,6 +129,9 @@ model Event {
   location    String
 
   imageUrl String?
+  imageFileId String?
+  category String
+  subCategory String
 
   // Community relation
   communityId String

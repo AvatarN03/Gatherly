@@ -1,43 +1,75 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateEventMutation } from '../../hooks/useEvents'
-import { useCommunitiesQuery } from '../../hooks/useCommunities'
+import { useMyCommunityQuery } from '../../hooks/useCommunities'
 import type { EventItem } from '../../types/event'
+import { EVENT_SUBCATEGORIES, type CommunityCategory } from '../../constant'
 
 const CreateEvent = () => {
   const navigate = useNavigate()
   const { mutate, isPending } = useCreateEventMutation()
-  const { data: communities = [] } = useCommunitiesQuery('')
+  const { data: communities = [] } = useMyCommunityQuery()
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
-  const [formData, setFormData] = useState<Omit<EventItem, 'id'>>({
+  const [formData, setFormData] = useState<Partial<EventItem>>({
     title: '',
     date: '',
     time: '',
     location: '',
     description: '',
     communityId: '',
+    category: '',
+    subCategory: '',
   })
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+  }
+
+  const selectedCommunity = communities.find((c) => c.id === formData.communityId)
+  const subcategories = selectedCommunity && 'category' in selectedCommunity
+    ? EVENT_SUBCATEGORIES[selectedCommunity.category as CommunityCategory] ?? []
+    : []
+
+  // ✅ fixed generic type
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      // ✅ reset subCategory and auto-set category from community on communityId change
+      ...(name === 'communityId' ? {
+        subCategory: '',
+        category: communities.find((c) => c.id === value)?.category || '',
+      } : {}),
     }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.communityId) {
       alert('Please select a community')
       return
     }
 
-    mutate(formData, {
-      onSuccess: () => {
-        navigate('/events')
-      },
+    const payload = new FormData()
+    payload.append('title', formData.title || '')
+    payload.append('date', formData.date || '')
+    payload.append('time', formData.time || '')
+    payload.append('location', formData.location || '')
+    payload.append('description', formData.description || '')
+    payload.append('communityId', formData.communityId || '')
+    payload.append('category', formData.category || '')
+    payload.append('subCategory', formData.subCategory || '')  // ✅ added
+    if (imageFile) {
+      payload.append('image', imageFile)
+    }
+
+    mutate(payload, {
+      onSuccess: () => navigate('/events'),
     })
   }
 
@@ -68,6 +100,23 @@ const CreateEvent = () => {
                 ))}
               </select>
             </div>
+
+            {
+              formData.category && (
+
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Community Category</label>
+                  <input
+                    value={formData.category}
+                    disabled
+
+                    className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+
+                </div>
+              )
+            }
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Event Title</label>
@@ -133,6 +182,42 @@ const CreateEvent = () => {
                 className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2"
+              />
+              {imageFile && (
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Preview"
+                  className="mt-2 h-32 w-full object-cover rounded-lg"
+                />
+              )}
+            </div>
+
+            {/* ✅ only shows after community is selected */}
+            {subcategories.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Sub-Category</label>
+                <select
+                  name="subCategory"
+                  value={formData.subCategory}
+                  onChange={handleChange}
+                  required
+                  className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="">Select a sub-category</option>
+                  {subcategories.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 flex gap-3">

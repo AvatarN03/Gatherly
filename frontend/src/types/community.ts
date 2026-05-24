@@ -3,6 +3,8 @@ export interface Community {
   name: string
   description: string
   imageUrl: string
+  imageFileId: string
+  category: string
   location: string
   createdById: string
   createdAt: string
@@ -47,8 +49,8 @@ export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 export interface CreateCommunityDto {
   name: string
   description: string
-  imageUrl: string
   location: string
+  category: string
 }
 
 export type UpdateCommunityDto = Partial<CreateCommunityDto>
