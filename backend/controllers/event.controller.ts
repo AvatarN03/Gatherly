@@ -1,11 +1,19 @@
 import type { Request, Response } from "express";
 import { prisma } from "../utils/prisma.ts";
 import { CustomRequest } from "../types/index.ts";
+import imagekit from "../utils/imagekit.ts";
 
 export const createEvent = async (req: CustomRequest, res: Response) => {
   try {
-    const { title, description, date, location, category,subCategory, communityId } =
-      req.body;
+    const {
+      title,
+      description,
+      date,
+      location,
+      category,
+      subCategory,
+      communityId,
+    } = req.body;
     const user = req?.user;
 
     if (!user) {
@@ -18,7 +26,9 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
     });
 
     if (!community) {
-      return res.status(404).json({ error: "Community not found" });
+      return res
+        .status(404)
+        .json({ error: "Community not found, Event cannot be created" });
     }
 
     const event = await prisma.event.create({
@@ -29,22 +39,10 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
         location,
         category,
         subCategory,
-        imageUrl : req.imageUrl || "",
+        imageUrl: req.imageUrl || "",
         imageFileId: req.imageFileId,
         communityId,
         createdById: user.id,
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            imageUrl: true,
-          },
-        },
-        members: true,
-        registrations: true,
       },
     });
 
@@ -54,7 +52,6 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
     res.status(500).json({ error: "Failed to create event" });
   }
 };
-
 
 export const getEvents = async (req: Request, res: Response) => {
   try {
@@ -77,17 +74,9 @@ export const getEvents = async (req: Request, res: Response) => {
     const events = await prisma.event.findMany({
       where,
       orderBy: {
-        date: "asc",
+        date: "asc", // event data not created data
       },
       include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            imageUrl: true,
-          },
-        },
         community: {
           select: {
             id: true,
@@ -95,8 +84,6 @@ export const getEvents = async (req: Request, res: Response) => {
             imageUrl: true,
           },
         },
-        members: true,
-        registrations: true,
       },
     });
 
@@ -106,7 +93,6 @@ export const getEvents = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch events" });
   }
 };
-
 
 export const getEventById = async (
   req: Request<{ id: string }>,
@@ -172,13 +158,12 @@ export const getEventById = async (
   }
 };
 
-
 export const updateEvent = async (
-  req: CustomRequest,
+  req: Request<{ id: string }>,
   res: Response,
 ) => {
   try {
-    const { id } = req.params as { id: string };
+    const { id } = req.params;
     const { title, description, date, location, category } = req.body;
     const user = req?.user;
 
@@ -201,33 +186,22 @@ export const updateEvent = async (
         .json({ error: "Not authorized to update this event" });
     }
 
+    const data: any = {
+      title,
+      description,
+      date: date ? new Date(date) : event.date,
+      location,
+      category,
+    };
+
+    if (req.imageUrl) {
+      data.imageUrl = req.imageUrl;
+      data.imageFileId = req.imageFileId;
+    }
+
     const updatedEvent = await prisma.event.update({
       where: { id },
-      data: {
-        title,
-        description,
-        date: date ? new Date(date) : undefined,
-        location,
-        imageUrl: req.imageUrl || event.imageUrl,
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            imageUrl: true,
-          },
-        },
-        community: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        members: true,
-        registrations: true,
-      },
+      data,
     });
 
     res.json(updatedEvent);
@@ -236,7 +210,6 @@ export const updateEvent = async (
     res.status(500).json({ error: "Failed to update event" });
   }
 };
-
 
 export const deleteEvent = async (
   req: Request<{ id: string }>,
@@ -265,6 +238,10 @@ export const deleteEvent = async (
         .json({ error: "Not authorized to delete this event" });
     }
 
+    if (event?.imageFileId) {
+      await imagekit.files.delete(event.imageFileId);
+    }
+
     await prisma.event.delete({
       where: { id },
     });
@@ -275,7 +252,6 @@ export const deleteEvent = async (
     res.status(500).json({ error: "Failed to delete event" });
   }
 };
-
 
 export const registerForEvent = async (
   req: Request<{ id: string }>,
@@ -313,26 +289,16 @@ export const registerForEvent = async (
         .json({ error: "Already registered for this event" });
     }
 
+    if (event.createdById === user.id) {
+      return res.status(400).json({
+        error: "Event creator cannot register for their own event",
+      });
+    }
+
     const registration = await prisma.eventRegistration.create({
       data: {
         eventId: id,
         userId: user.id,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            imageUrl: true,
-          },
-        },
-        event: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
       },
     });
 
@@ -342,7 +308,6 @@ export const registerForEvent = async (
     res.status(500).json({ error: "Failed to register for event" });
   }
 };
-
 
 export const unregisterFromEvent = async (
   req: Request<{ id: string }>,

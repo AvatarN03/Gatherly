@@ -1,24 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
-import { clerkClient, getAuth } from "@clerk/express";
-import { prisma } from "../utils/prisma.ts";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user:{
-            id: string;
-            email: string;
-            name?: string | null;
-            imageUrl?: string | null;
-          }
-    }
-  }
-}
+import { getAuth } from "@clerk/express";
+import { findOrCreateUser } from "../services/userSync.ts";
 
 export const authMiddleware = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { userId } = getAuth(req);
@@ -29,35 +17,7 @@ export const authMiddleware = async (
       });
     }
 
-    // Check existing user
-    let user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-
-    // Create user first time login
-    if (!user) {
-      // Fetch Clerk user
-      const clerkUser = await clerkClient.users.getUser(userId);
-
-      user = await prisma.user.create({
-        data: {
-          id: userId,
-          email:
-            clerkUser.emailAddresses[0]?.emailAddress || "",
-
-          name:
-            `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
-
-          imageUrl:
-            clerkUser.imageUrl || "",
-        },
-      });
-    }
-
-    // Attach DB user (include basic profile fields)
-    req.user = user;
+    req.user = await findOrCreateUser(userId);
 
     next();
   } catch (error) {

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { prisma } from "../utils/prisma.ts";
 import { CustomRequest } from "../types/index.ts";
+import imagekit from "../utils/imagekit.ts";
 
 export const createCommunity = async (req: CustomRequest, res: Response) => {
   try {
@@ -23,7 +24,6 @@ export const createCommunity = async (req: CustomRequest, res: Response) => {
         createdById: user.id,
       },
     });
-    console.log("check2");
 
     res.status(201).json(community);
   } catch (error) {
@@ -49,7 +49,7 @@ export const getCommunities = async (req: Request, res: Response) => {
   res.json(communities);
 };
 
-export const getMyCommunities = async (req: CustomRequest, res: Response) => {
+export const getMyCommunities = async (req: Request, res: Response) => {
   const user = req?.user;
   if (!user) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -71,56 +71,91 @@ export const getCommunityById = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
-  const { id } = req.params;
-  const community = await prisma.community.findUnique({
-    where: { id },
-    include: {
-      members: true,
-    },
-  });
+  try {
+    const { id } = req.params;
 
-  if (!community) {
-    return res.status(404).json({ error: "Community not found" });
+    const community = await prisma.community.findUnique({
+      where: { id },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            imageUrl: true,
+          },
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
+        events: true,
+      },
+    });
+
+    if (!community) {
+      return res.status(404).json({
+        error: "Community not found",
+      });
+    }
+
+    res.json(community);
+  } catch (error) {
+    console.error("GET COMMUNITY ERROR:", error);
+
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Failed to fetch community",
+    });
   }
-
-  res.json(community);
 };
 
-export const verifyCommunity = async (
-  req: Request<{ id: string }>,
-  res: Response,
-) => {
-  const { id } = req.params;
-  const community = await prisma.community.findUnique({
-    where: { id },
-  });
+// export const verifyCommunity = async (
+//   req: Request<{ id: string }>,
+//   res: Response,
+// ) => {
+//   const { id } = req.params;
+//   const community = await prisma.community.findUnique({
+//     where: { id },
+//   });
 
-  if (!community) {
-    return res.status(404).json({ error: "Community not found" });
-  }
+//   if (!community) {
+//     return res.status(404).json({ error: "Community not found" });
+//   }
 
-  res.json({ message: "Community exists" });
-};
+//   res.json({ message: "Community exists" });
+// };
 
-export const updateCommunity = async (
-  req: CustomRequest,
-  res: Response,
-) => {
+export const updateCommunity = async (req: Request, res: Response) => {
   const { id } = req.params as { id: string };
   const { name, description, category, location } = req.body;
 
   try {
+    const data: any = {
+      name,
+      description,
+      category,
+      location,
+    };
+
+    if (req.imageUrl) {
+      data.imageUrl = req.imageUrl;
+      data.imageFileId = req.imageFileId;
+    }
+
     const updatedCommunity = await prisma.community.update({
       where: { id },
-      data: {
-        name,
-        description,
-        imageUrl: req.imageUrl || "",
-        imageFileId: req.imageFileId,
-        category,
-        location,
-      },
+      data,
     });
+
     res.json(updatedCommunity);
   } catch (error) {
     res.status(500).json({ error: "Something went wrong" });
@@ -133,7 +168,6 @@ export const deleteCommunity = async (
 ) => {
   const { id } = req.params;
   const user = req?.user;
-  console.log("User ID from auth middleware:", user?.id);
 
   try {
     const community = await prisma.community.findUnique({
@@ -150,7 +184,10 @@ export const deleteCommunity = async (
         .status(403)
         .json({ error: "Not authorized to delete this community" });
     }
-    console.log("Delete community called");
+
+    if (community?.imageFileId) {
+      await imagekit.files.delete(community.imageFileId);
+    }
 
     await prisma.community.delete({
       where: { id },
