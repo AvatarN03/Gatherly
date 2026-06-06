@@ -17,10 +17,10 @@ datasource db {
 // =========================
 
 model User {
-  id        String   @id
-  email     String   @unique
-  name      String
-  imageUrl  String
+  id       String @id
+  email    String @unique
+  name     String
+  imageUrl String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -49,7 +49,7 @@ model User {
 // =========================
 
 model Community {
-  id          String @id @default(uuid())
+  id String @id @default(uuid())
 
   name        String
   description String
@@ -59,7 +59,7 @@ model Community {
   location    String
 
   createdById String
-  createdBy   User @relation("UserCommunities", fields: [createdById], references: [id])
+  createdBy   User   @relation("UserCommunities", fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,8 +84,9 @@ model Membership {
   userId      String
   communityId String
 
-  user      User      @relation(fields: [userId], references: [id])
-  community Community @relation(fields: [communityId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   role CommunityRole @default(MEMBER)
 
@@ -104,8 +105,9 @@ model MembershipRequest {
   userId      String
   communityId String
 
-  user      User      @relation(fields: [userId], references: [id])
-  community Community @relation(fields: [communityId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   proofUrl String?
 
@@ -128,18 +130,18 @@ model Event {
   date        DateTime
   location    String
 
-  imageUrl String?
+  imageUrl    String?
   imageFileId String?
-  category String
+  category    String
   subCategory String
 
   // Community relation
   communityId String
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   // Event creator/admin
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation(fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -163,7 +165,7 @@ model EventMember {
   eventId String
   userId  String
 
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id])
 
   // host, speaker, coordinator
@@ -185,7 +187,7 @@ model EventRegistration {
   eventId String
   userId  String
 
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id])
 
   status RegistrationStatus @default(PENDING)

@@ -18,11 +18,12 @@ const router = Router();
 
 // public routes
 router.get("/", getCommunities);
-router.get("/:id", getCommunityById);
-
 
 // private routes 
 router.get("/my", authMiddleware, getMyCommunities);
+
+// it must be below to avoid conflict with /my route
+router.get("/:id", getCommunityById);
 
 
 // Route: multer runs first → uploadToImageKit → your controller
@@ -40,7 +41,7 @@ router.delete(
   deleteCommunity,
 );
 
-router.patch(
+router.put(
   "/:id",
   authMiddleware,
   upload.single("updateCommunityImage"),

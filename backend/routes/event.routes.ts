@@ -53,11 +53,11 @@ router.delete(
 router.post("/:id/register", authMiddleware, registerForEvent);
 router.delete("/:id/register", authMiddleware, unregisterFromEvent);
 
-// TODO: come back after membership setup 
-// // -> admin actions
-// router.get("/:id/registrations", authMiddleware, getEventRegistrations);
 
-// TODO: come back after membership setup 
+// // -> admin actions
+router.get("/:id/registrations", authMiddleware, getEventRegistrations);
+
+// TODO: come back if i need to add event member management routes, but for now, we can just manage event members through the registration routes.
 // // Event member management
 // router.post("/:id/members", authMiddleware, addEventMember);
 // router.delete("/:id/members/:memberId", authMiddleware, removeEventMember);

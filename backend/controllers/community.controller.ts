@@ -22,6 +22,13 @@ export const createCommunity = async (req: CustomRequest, res: Response) => {
         category,
         location,
         createdById: user.id,
+
+        members: {
+          create: {
+            userId: user.id,
+            role: "OWNER",
+          },
+        },
       },
     });
 
@@ -54,6 +61,7 @@ export const getMyCommunities = async (req: Request, res: Response) => {
   if (!user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+  
 
   const communities = await prisma.community.findMany({
     where: {
@@ -158,6 +166,7 @@ export const updateCommunity = async (req: Request, res: Response) => {
 
     res.json(updatedCommunity);
   } catch (error) {
+    console.log("UPDATE COMMUNITY ERROR:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -185,9 +194,16 @@ export const deleteCommunity = async (
         .json({ error: "Not authorized to delete this community" });
     }
 
-    if (community?.imageFileId) {
-      await imagekit.files.delete(community.imageFileId);
+    if (community.imageFileId) {
+      try {
+        await imagekit.files.delete(community.imageFileId);
+        console.log("Community image deleted from ImageKit:", community.imageFileId);
+      } catch (error) {
+        console.log("Image deletion failed:", error);
+      }
     }
+
+    console.log("COMMUNITY TO DELETE");
 
     await prisma.community.delete({
       where: { id },
@@ -195,6 +211,7 @@ export const deleteCommunity = async (
 
     res.json({ message: "Community deleted successfully" });
   } catch (error) {
+    console.error("DELETE COMMUNITY ERROR:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };

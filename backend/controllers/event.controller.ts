@@ -3,7 +3,10 @@ import { prisma } from "../utils/prisma.ts";
 import { CustomRequest } from "../types/index.ts";
 import imagekit from "../utils/imagekit.ts";
 
-export const createEvent = async (req: CustomRequest, res: Response) => {
+export const createEvent = async (
+  req: CustomRequest,
+  res: Response
+) => {
   try {
     const {
       title,
@@ -14,42 +17,85 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
       subCategory,
       communityId,
     } = req.body;
-    const user = req?.user;
+
+    const members = req.body.members
+      ? JSON.parse(req.body.members)
+      : [];
+
+    const user = req.user;
 
     if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
     }
 
-    // Verify community exists
     const community = await prisma.community.findUnique({
-      where: { id: communityId },
-    });
-
-    if (!community) {
-      return res
-        .status(404)
-        .json({ error: "Community not found, Event cannot be created" });
-    }
-
-    const event = await prisma.event.create({
-      data: {
-        title,
-        description,
-        date: new Date(date),
-        location,
-        category,
-        subCategory,
-        imageUrl: req.imageUrl || "",
-        imageFileId: req.imageFileId,
-        communityId,
-        createdById: user.id,
+      where: {
+        id: communityId,
       },
     });
 
-    res.status(201).json(event);
+    if (!community) {
+      return res.status(404).json({
+        error: "Community not found",
+      });
+    }
+
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const event = await tx.event.create({
+          data: {
+            title,
+            description,
+            date: new Date(date),
+            location,
+            category,
+            subCategory,
+            imageUrl: req.imageUrl || "",
+            imageFileId: req.imageFileId,
+            communityId,
+            createdById: user.id,
+          },
+        });
+
+        // Creator becomes HOST
+        await tx.eventMember.create({
+          data: {
+            eventId: event.id,
+            userId: user.id,
+            role: "HOST",
+          },
+        });
+
+        // Selected members
+        if (members.length > 0) {
+          await tx.eventMember.createMany({
+            data: members.map(
+              (member: {
+                userId: string;
+                role: string;
+              }) => ({
+                eventId: event.id,
+                userId: member.userId,
+                role: member.role,
+              })
+            ),
+            skipDuplicates: true,
+          });
+        }
+
+        return event;
+      }
+    );
+
+    res.status(201).json(result);
   } catch (error) {
-    console.error("Error creating event:", error);
-    res.status(500).json({ error: "Failed to create event" });
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to create event",
+    });
   }
 };
 
@@ -164,11 +210,23 @@ export const updateEvent = async (
 ) => {
   try {
     const { id } = req.params;
-    const { title, description, date, location, category } = req.body;
+
+    const {
+      title,
+      description,
+      date,
+      location,
+      category,
+      subCategory,
+      members,
+    } = req.body;
+
     const user = req?.user;
 
     if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
     }
 
     const event = await prisma.event.findUnique({
@@ -176,38 +234,81 @@ export const updateEvent = async (
     });
 
     if (!event) {
-      return res.status(404).json({ error: "Event not found" });
+      return res.status(404).json({
+        error: "Event not found",
+      });
     }
 
-    // Authorization check - only creator can update
     if (event.createdById !== user.id) {
-      return res
-        .status(403)
-        .json({ error: "Not authorized to update this event" });
-    }
-
-    const data: any = {
-      title,
-      description,
-      date: date ? new Date(date) : event.date,
-      location,
-      category,
-    };
-
-    if (req.imageUrl) {
-      data.imageUrl = req.imageUrl;
-      data.imageFileId = req.imageFileId;
+      return res.status(403).json({
+        error: "Not authorized",
+      });
     }
 
     const updatedEvent = await prisma.event.update({
       where: { id },
-      data,
+      data: {
+        title,
+        description,
+        date: date
+          ? new Date(date)
+          : event.date,
+        location,
+        category,
+        subCategory,
+        ...(req.imageUrl && {
+          imageUrl: req.imageUrl,
+          imageFileId: req.imageFileId,
+        }),
+      },
     });
+
+    if (members) {
+      const parsedMembers =
+        typeof members === "string"
+          ? JSON.parse(members)
+          : members;
+
+      await prisma.eventMember.deleteMany({
+        where: {
+          eventId: id,
+        },
+      });
+
+      await prisma.eventMember.create({
+        data: {
+          eventId: id,
+          userId: user.id,
+          role: "HOST",
+        },
+      });
+
+      if (parsedMembers.length > 0) {
+        await prisma.eventMember.createMany({
+          data: parsedMembers
+            .filter(
+              (m: any) => m.userId !== user.id
+            )
+            .map((m: any) => ({
+              eventId: id,
+              userId: m.userId,
+              role: m.role,
+            })),
+          skipDuplicates: true,
+        });
+      }
+    }
 
     res.json(updatedEvent);
   } catch (error) {
-    console.error("Error updating event:", error);
-    res.status(500).json({ error: "Failed to update event" });
+    console.error(
+      "Error updating event:",
+      error
+    );
+
+    res.status(500).json({
+      error: "Failed to update event",
+    });
   }
 };
 

@@ -47,7 +47,8 @@ export const joinCommunity = async (
 
     res.status(201).json(request);
   } catch (error) {
-    res.status(500).json({ error: "Something went wrong" });
+    console.log(error)
+    res.status(500).json({ error: "Failed to send request" });
   }
 };
 
@@ -66,6 +67,7 @@ export const getMembers = async (
             id: true,
             name: true,
             email: true,
+            imageUrl: true,
           },
         },
       },
@@ -117,6 +119,29 @@ export const leaveCommunity = async (
   }
 };
 
+
+export const getMyRequests = async (req: Request, res: Response) => {
+  try {
+    const userId = req?.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const requests = await prisma.membershipRequest.findMany({
+      where: { userId },
+      include: {
+        community: true,
+      },
+    });
+
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user requests" });
+  }
+};
+
+
 //only owner/admin
 export const getCommunityRequests = async (
   req: Request<{ id: string }>,
@@ -157,11 +182,12 @@ export const getCommunityRequests = async (
   }
 };
 
-export const handleRequest = async (req: Request<{ requestId: string }>, res: Response) => {
-  console.log("Handle request called");
-
+export const handleRequest = async (
+  req: Request<{ requestId: string }>,
+  res: Response
+) => {
   try {
-    const user = req?.user;
+    const user = req.user;
     const { requestId } = req.params;
     const { status } = req.body;
 
@@ -169,7 +195,6 @@ export const handleRequest = async (req: Request<{ requestId: string }>, res: Re
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // ✅ Validate status
     if (!["APPROVED", "REJECTED"].includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
     }
@@ -182,12 +207,6 @@ export const handleRequest = async (req: Request<{ requestId: string }>, res: Re
       return res.status(404).json({ error: "Request not found" });
     }
 
-    // ✅ Prevent re-processing
-    if (request.status !== "PENDING") {
-      return res.status(400).json({ error: "Request already handled" });
-    }
-
-    // 🔐 Authorization
     const membership = await prisma.membership.findUnique({
       where: {
         userId_communityId: {
@@ -201,11 +220,9 @@ export const handleRequest = async (req: Request<{ requestId: string }>, res: Re
       return res.status(403).json({ error: "Not authorized" });
     }
 
-    // ✅ Use transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // If approved → create membership
+    await prisma.$transaction(async (tx) => {
       if (status === "APPROVED") {
-        const existing = await tx.membership.findUnique({
+        const existingMembership = await tx.membership.findUnique({
           where: {
             userId_communityId: {
               userId: request.userId,
@@ -214,47 +231,33 @@ export const handleRequest = async (req: Request<{ requestId: string }>, res: Re
           },
         });
 
-        if (!existing) {
+        if (!existingMembership) {
           await tx.membership.create({
             data: {
               userId: request.userId,
               communityId: request.communityId,
+              role: "MEMBER",
             },
           });
         }
       }
 
-      // Update request
-      return await tx.membershipRequest.update({
-        where: { id: requestId },
-        data: { status },
+      // Remove request after processing
+      await tx.membershipRequest.delete({
+        where: {
+          id: requestId,
+        },
       });
     });
 
-    res.json(result);
+    return res.json({
+      message: `Request ${status.toLowerCase()} successfully`,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to process request" });
-  }
-};
-
-export const getMyRequests = async (req: Request, res: Response) => {
-  try {
-    const userId = req?.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const requests = await prisma.membershipRequest.findMany({
-      where: { userId },
-      include: {
-        community: true,
-      },
+    return res.status(500).json({
+      error: "Failed to process request",
     });
-
-    res.json(requests);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch user requests" });
   }
 };
+
