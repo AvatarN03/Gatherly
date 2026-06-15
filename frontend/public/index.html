@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gatherly — Build Communities. Create Events. Bring People Together.</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cal+Sans&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #6366F1;
+  --primary-light: #818CF8;
+  --secondary: #8B5CF6;
+  --accent: #EC4899;
+  --bg: #0F172A;
+  --card: #1E293B;
+  --card2: #162032;
+  --border: rgba(99,102,241,0.18);
+  --text: #F8FAFC;
+  --muted: #94A3B8;
+  --subtle: #475569;
+  --glass: rgba(30,41,59,0.7);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
+/* ── Typography ── */
+h1,h2,h3,h4 { font-family: 'Syne', sans-serif; line-height: 1.15; }
+
+/* ── Nav ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 0 5%;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 68px;
+  background: rgba(15,23,42,0.75);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+  transition: background .3s;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  text-decoration: none;
+}
+.nav-logo svg { flex-shrink: 0; }
+.nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
+.nav-links a {
+  color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-actions { display: flex; gap: 12px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 10px; font-weight: 600; font-size: .9rem; cursor: pointer; transition: all .22s; text-decoration: none; border: none; }
+.btn-ghost { padding: 8px 18px; background: transparent; color: var(--muted); }
+.btn-ghost:hover { color: var(--text); }
+.btn-primary {
+  padding: 10px 22px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(99,102,241,.35);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99,102,241,.5); }
+.btn-large { padding: 14px 32px; font-size: 1rem; border-radius: 12px; }
+.btn-outline {
+  padding: 14px 32px; font-size: 1rem; border-radius: 12px;
+  border: 1px solid var(--border); color: var(--text);
+  background: rgba(99,102,241,.07);
+}
+.btn-outline:hover { background: rgba(99,102,241,.15); border-color: var(--primary); }
+.hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+.hamburger span { display: block; width: 22px; height: 2px; background: var(--muted); border-radius: 2px; transition: all .3s; }
+
+/* ── Hero ── */
+#hero {
+  position: relative; min-height: 100vh;
+  display: flex; align-items: center;
+  padding: 120px 5% 80px;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,.22) 0%, transparent 70%);
+}
+.blob {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: .5; animation: blobFloat 8s ease-in-out infinite;
+}
+.blob1 { width: 480px; height: 480px; background: radial-gradient(circle, rgba(99,102,241,.5), transparent); top: -120px; left: -100px; animation-delay: 0s; }
+.blob2 { width: 360px; height: 360px; background: radial-gradient(circle, rgba(139,92,246,.45), transparent); top: 30%; right: -60px; animation-delay: -3s; }
+.blob3 { width: 280px; height: 280px; background: radial-gradient(circle, rgba(236,72,153,.35), transparent); bottom: 60px; left: 30%; animation-delay: -5.5s; }
+@keyframes blobFloat {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(20px,-30px) scale(1.05); }
+  66% { transform: translate(-15px,20px) scale(.96); }
+}
+.hero-inner {
+  position: relative; z-index: 1; width: 100%; max-width: 1240px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.3);
+  border-radius: 100px; padding: 6px 16px 6px 6px;
+  font-size: .78rem; font-weight: 600; color: var(--primary-light);
+  margin-bottom: 24px;
+}
+.hero-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.8)} }
+.hero-title {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, #F8FAFC 30%, var(--primary-light) 70%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 22px;
+}
+.hero-sub { font-size: 1.08rem; color: var(--muted); max-width: 500px; margin-bottom: 36px; line-height: 1.75; font-weight: 300; }
+.hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+.hero-trust { margin-top: 48px; display: flex; align-items: center; gap: 12px; }
+.hero-avatars { display: flex; }
+.hero-avatars span {
+  width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--bg);
+  display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 700;
+  margin-left: -8px;
+}
+.hero-avatars span:first-child { margin-left: 0; }
+.av1{background:linear-gradient(135deg,#6366F1,#8B5CF6)}
+.av2{background:linear-gradient(135deg,#EC4899,#F43F5E)}
+.av3{background:linear-gradient(135deg,#06B6D4,#3B82F6)}
+.av4{background:linear-gradient(135deg,#10B981,#6366F1)}
+.hero-trust-text { font-size: .82rem; color: var(--muted); }
+.hero-trust-text strong { color: var(--text); }
+
+/* Dashboard Mockup */
+.dashboard-mockup {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,.5), 0 0 0 1px rgba(99,102,241,.1);
+  animation: floatMockup 6s ease-in-out infinite;
+}
+@keyframes floatMockup {
+  0%,100%{transform:translateY(0) rotate(-1deg)}
+  50%{transform:translateY(-12px) rotate(-1deg)}
+}
+.mock-topbar {
+  display: flex; align-items: center; gap: 8px; padding: 14px 18px;
+  background: rgba(99,102,241,.08); border-bottom: 1px solid var(--border);
+}
+.mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+.md1{background:#FF5F57}.md2{background:#FEBC2E}.md3{background:#28C840}
+.mock-title-bar { flex: 1; text-align: center; font-size: .72rem; color: var(--subtle); font-weight: 500; }
+.mock-body { padding: 18px; display: grid; gap: 14px; }
+.mock-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.mock-card {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px; padding: 14px;
+}
+.mock-card-label { font-size: .64rem; text-transform: uppercase; letter-spacing: .08em; color: var(--subtle); margin-bottom: 6px; font-weight: 600; }
+.mock-stat { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--text); }
+.mock-stat-sub { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+.mock-badge { display: inline-flex; align-items: center; gap: 4px; font-size: .62rem; font-weight: 600; padding: 2px 7px; border-radius: 6px; margin-top: 6px; }
+.badge-up { background: rgba(16,185,129,.15); color: #10B981; }
+.badge-new { background: rgba(99,102,241,.15); color: var(--primary-light); }
+.mock-events-list { display: grid; gap: 8px; }
+.mock-event {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.04); border-radius: 9px; padding: 10px 12px;
+}
+.mock-event-icon {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: .7rem;
+}
+.ei1{background:rgba(99,102,241,.25)} .ei2{background:rgba(236,72,153,.22)} .ei3{background:rgba(6,182,212,.2)}
+.mock-event-info { flex: 1; min-width: 0; }
+.mock-event-name { font-size: .73rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mock-event-date { font-size: .62rem; color: var(--muted); }
+.mock-event-count { font-size: .68rem; color: var(--primary-light); font-weight: 600; }
+.mock-bar-section { padding: 0 2px; }
+.mock-bar-label { font-size: .64rem; color: var(--muted); margin-bottom: 7px; }
+.mock-bar-track { height: 5px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
+.mock-bar-fill { height: 100%; border-radius: 3px; }
+.bf1{background:linear-gradient(90deg,var(--primary),var(--secondary));width:78%}
+.bf2{background:linear-gradient(90deg,var(--accent),#F43F5E);width:62%}
+.bf3{background:linear-gradient(90deg,#06B6D4,#3B82F6);width:45%}
+
+/* ── Section Shared ── */
+section { padding: 96px 5%; }
+.section-inner { max-width: 1240px; margin: 0 auto; }
+.section-tag {
+  display: inline-block; font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--primary-light); background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2);
+  border-radius: 100px; padding: 4px 14px; margin-bottom: 16px;
+}
+.section-title { font-size: clamp(1.9rem, 3.5vw, 2.7rem); font-weight: 800; margin-bottom: 14px; }
+.section-sub { color: var(--muted); font-size: 1.05rem; max-width: 560px; font-weight: 300; }
+.text-center { text-align: center; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* ── Trust ── */
+#trust { padding: 56px 5%; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: rgba(99,102,241,.03); }
+.trust-inner { max-width: 1240px; margin: 0 auto; }
+.trust-label { text-align: center; font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--subtle); font-weight: 600; margin-bottom: 36px; }
+.trust-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; }
+.trust-stat {
+  text-align: center; padding: 28px 16px;
+  border-right: 1px solid var(--border);
+}
+.trust-stat:last-child { border-right: none; }
+.trust-num {
+  font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.trust-desc { font-size: .83rem; color: var(--muted); margin-top: 4px; font-weight: 400; }
+
+/* ── Features ── */
+.features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 56px; }
+.feature-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 30px;
+  transition: transform .25s, box-shadow .25s, border-color .25s;
+  cursor: default;
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.3); border-color: rgba(99,102,241,.4); }
+.feature-icon {
+  width: 48px; height: 48px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; margin-bottom: 18px;
+}
+.fi1{background:rgba(99,102,241,.18)} .fi2{background:rgba(236,72,153,.15)} .fi3{background:rgba(6,182,212,.15)}
+.fi4{background:rgba(16,185,129,.14)} .fi5{background:rgba(245,158,11,.14)} .fi6{background:rgba(239,68,68,.13)}
+.feature-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 9px; font-family: 'Syne', sans-serif; }
+.feature-desc { font-size: .88rem; color: var(--muted); line-height: 1.65; }
+
+/* ── How it Works ── */
+#how { background: radial-gradient(ellipse 100% 60% at 50% 50%, rgba(99,102,241,.07) 0%, transparent 70%); }
+.steps-wrap { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; margin-top: 60px; position: relative; }
+.steps-wrap::before {
+  content: ''; position: absolute; top: 38px; left: calc(12.5% + 24px); right: calc(12.5% + 24px);
+  height: 2px; background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  z-index: 0;
+}
+.step { text-align: center; padding: 0 16px; position: relative; z-index: 1; }
+.step-num {
+  width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px rgba(99,102,241,.25);
+  border: 2px solid transparent;
+}
+.step-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .97rem; margin-bottom: 9px; }
+.step-desc { font-size: .83rem; color: var(--muted); line-height: 1.6; }
+
+/* ── Showcase ── */
+.showcase-block {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+  margin-bottom: 80px;
+}
+.showcase-block:last-child { margin-bottom: 0; }
+.showcase-block.reverse { direction: rtl; }
+.showcase-block.reverse > * { direction: ltr; }
+.showcase-text { }
+.showcase-eyebrow { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--primary-light); margin-bottom: 12px; }
+.showcase-title { font-size: clamp(1.6rem, 2.8vw, 2rem); font-weight: 800; margin-bottom: 16px; }
+.showcase-desc { color: var(--muted); font-size: .95rem; line-height: 1.75; margin-bottom: 24px; font-weight: 300; }
+.showcase-list { list-style: none; display: grid; gap: 10px; }
+.showcase-list li { display: flex; align-items: center; gap: 10px; font-size: .88rem; color: var(--muted); }
+.showcase-list li::before { content: ''; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg,var(--primary),var(--secondary)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.showcase-visual {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.4);
+  min-height: 300px;
+  transition: transform .3s;
+}
+.showcase-visual:hover { transform: scale(1.015); }
+.sv-header {
+  padding: 16px 20px; background: rgba(99,102,241,.08); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sv-header-title { font-size: .75rem; font-weight: 600; color: var(--muted); }
+.sv-header-actions { display: flex; gap: 6px; }
+.sv-ha { width: 24px; height: 24px; border-radius: 6px; background: rgba(255,255,255,.07); }
+.sv-body { padding: 20px; }
+
+/* mini graphs */
+.sv-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-bottom: 16px; }
+.sv-bar { flex: 1; border-radius: 4px 4px 0 0; background: rgba(99,102,241,.25); transition: background .3s; }
+.sv-bar:hover { background: var(--primary); }
+.sv-bar.active { background: linear-gradient(180deg,var(--secondary),var(--primary)); }
+.sv-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.sv-metric { background: rgba(255,255,255,.04); border-radius: 10px; padding: 12px; }
+.sv-metric-val { font-family: 'Syne',sans-serif; font-weight: 700; font-size: 1.1rem; }
+.sv-metric-label { font-size: .62rem; color: var(--muted); margin-top: 2px; }
+
+/* event list mini */
+.sv-events { display: grid; gap: 8px; }
+.sv-event-row {
+  display: grid; grid-template-columns: 36px 1fr auto;
+  align-items: center; gap: 10px;
+  background: rgba(255,255,255,.04); border-radius: 9px; padding: 10px 12px;
+}
+.sv-event-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .8rem; }
+.sv-event-name { font-size: .75rem; font-weight: 600; }
+.sv-event-meta { font-size: .62rem; color: var(--muted); }
+.sv-event-tag { font-size: .62rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+.tag-live { background: rgba(16,185,129,.15); color: #10B981; }
+.tag-soon { background: rgba(245,158,11,.12); color: #F59E0B; }
+.tag-reg { background: rgba(99,102,241,.15); color: var(--primary-light); }
+
+/* insight visual */
+.sv-insight { display: grid; gap: 10px; }
+.sv-insight-row { display: flex; align-items: center; gap: 10px; }
+.sv-insight-label { font-size: .72rem; color: var(--muted); width: 100px; flex-shrink: 0; }
+.sv-insight-track { flex: 1; height: 8px; background: rgba(255,255,255,.07); border-radius: 4px; overflow: hidden; }
+.sv-insight-bar { height: 100%; border-radius: 4px; }
+.sv-insight-pct { font-size: .7rem; font-weight: 600; width: 32px; text-align: right; }
+.ib1{background:linear-gradient(90deg,var(--primary),var(--secondary))} .ib2{background:linear-gradient(90deg,var(--accent),#F43F5E)} .ib3{background:linear-gradient(90deg,#06B6D4,#3B82F6)} .ib4{background:linear-gradient(90deg,#10B981,#06B6D4)}
+
+/* ── Benefits ── */
+#benefits { background: rgba(99,102,241,.03); }
+.benefits-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 56px; }
+.benefit-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 36px 30px;
+  text-align: center; transition: all .25s;
+}
+.benefit-card:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(0,0,0,.3); border-color: rgba(99,102,241,.35); }
+.benefit-icon-wrap {
+  width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 22px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
+}
+.bi1{background:linear-gradient(135deg,rgba(99,102,241,.3),rgba(139,92,246,.2))}
+.bi2{background:linear-gradient(135deg,rgba(236,72,153,.25),rgba(244,63,94,.15))}
+.bi3{background:linear-gradient(135deg,rgba(6,182,212,.22),rgba(59,130,246,.15))}
+.benefit-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; font-family: 'Syne', sans-serif; }
+.benefit-desc { color: var(--muted); font-size: .88rem; line-height: 1.65; }
+.benefit-list { list-style: none; display: grid; gap: 8px; margin-top: 18px; text-align: left; }
+.benefit-list li { display: flex; align-items: flex-start; gap: 8px; font-size: .82rem; color: var(--muted); }
+.benefit-list li::before { content: '✓'; color: var(--primary-light); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+/* ── Testimonials ── */
+.testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 56px; }
+.testimonial-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px;
+  transition: all .25s; position: relative; overflow: hidden;
+}
+.testimonial-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+}
+.testimonial-card:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.testimonial-stars { color: #F59E0B; font-size: .85rem; margin-bottom: 14px; }
+.testimonial-quote { font-size: .93rem; color: var(--muted); line-height: 1.7; font-weight: 300; margin-bottom: 20px; font-style: italic; }
+.testimonial-author { display: flex; align-items: center; gap: 12px; }
+.testimonial-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .8rem; color: #fff;
+}
+.ta1{background:linear-gradient(135deg,#6366F1,#8B5CF6)}
+.ta2{background:linear-gradient(135deg,#EC4899,#F43F5E)}
+.ta3{background:linear-gradient(135deg,#06B6D4,#3B82F6)}
+.testimonial-name { font-weight: 600; font-size: .88rem; }
+.testimonial-role { font-size: .75rem; color: var(--subtle); }
+
+/* ── Pricing ── */
+#pricing { background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,.08) 0%, transparent 60%); }
+.pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 56px; align-items: start; }
+.pricing-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 36px 30px;
+  transition: all .3s; position: relative; overflow: hidden;
+}
+.pricing-card.featured {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), 0 30px 70px rgba(99,102,241,.25);
+  background: linear-gradient(145deg, rgba(99,102,241,.12), var(--card));
+}
+.pricing-card:hover:not(.featured) { border-color: rgba(99,102,241,.3); transform: translateY(-2px); }
+.pricing-badge {
+  position: absolute; top: 18px; right: 18px;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; padding: 4px 12px; border-radius: 100px;
+}
+.pricing-plan { font-size: .75rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+.pricing-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
+.pricing-amount { font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800; }
+.pricing-period { font-size: .85rem; color: var(--muted); }
+.pricing-desc { font-size: .82rem; color: var(--muted); margin-bottom: 28px; }
+.pricing-divider { height: 1px; background: var(--border); margin-bottom: 22px; }
+.pricing-features { list-style: none; display: grid; gap: 11px; margin-bottom: 30px; }
+.pricing-features li { display: flex; align-items: flex-start; gap: 10px; font-size: .85rem; color: var(--muted); }
+.pf-check { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; background: rgba(99,102,241,.2); display: flex; align-items: center; justify-content: center; font-size: .6rem; color: var(--primary-light); margin-top: 1px; }
+.btn-pricing-primary {
+  display: block; width: 100%; text-align: center; padding: 13px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; border-radius: 12px; font-weight: 600; font-size: .92rem;
+  text-decoration: none; transition: all .22s; border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(99,102,241,.35);
+}
+.btn-pricing-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99,102,241,.5); }
+.btn-pricing-ghost {
+  display: block; width: 100%; text-align: center; padding: 13px;
+  background: transparent; color: var(--text); border-radius: 12px; font-weight: 600; font-size: .92rem;
+  text-decoration: none; transition: all .22s; border: 1px solid var(--border); cursor: pointer;
+}
+.btn-pricing-ghost:hover { border-color: var(--primary); background: rgba(99,102,241,.08); }
+
+/* ── FAQ ── */
+.faq-list { max-width: 740px; margin: 56px auto 0; display: grid; gap: 12px; }
+.faq-item {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+  transition: border-color .2s;
+}
+.faq-item.open { border-color: rgba(99,102,241,.4); }
+.faq-q {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 22px; cursor: pointer; user-select: none;
+  font-weight: 600; font-size: .95rem;
+}
+.faq-q:hover { color: var(--primary-light); }
+.faq-icon { width: 24px; height: 24px; border-radius: 6px; background: rgba(99,102,241,.12); display: flex; align-items: center; justify-content: center; font-size: .8rem; transition: all .25s; flex-shrink: 0; color: var(--primary-light); }
+.faq-item.open .faq-icon { background: var(--primary); color: #fff; transform: rotate(45deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .35s; }
+.faq-a-inner { padding: 0 22px 20px; font-size: .87rem; color: var(--muted); line-height: 1.7; }
+
+/* ── CTA ── */
+#cta {
+  background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(139,92,246,.1), rgba(236,72,153,.08));
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+#cta::before {
+  content: ''; position: absolute; top: -50%; left: -20%; right: -20%; bottom: -50%;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(99,102,241,.12), transparent);
+  pointer-events: none;
+}
+.cta-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+.cta-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 16px; }
+.cta-sub { color: var(--muted); font-size: 1.05rem; margin-bottom: 36px; line-height: 1.7; font-weight: 300; }
+.cta-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+/* ── Footer ── */
+footer {
+  padding: 72px 5% 36px;
+  border-top: 1px solid var(--border);
+}
+.footer-inner { max-width: 1240px; margin: 0 auto; }
+.footer-top { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 60px; }
+.footer-brand-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 14px; text-decoration: none;
+}
+.footer-tagline { font-size: .83rem; color: var(--muted); line-height: 1.65; max-width: 240px; margin-bottom: 20px; }
+.footer-socials { display: flex; gap: 10px; }
+.footer-social {
+  width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: .75rem;
+  color: var(--muted); text-decoration: none; transition: all .2s;
+}
+.footer-social:hover { border-color: var(--primary); color: var(--primary-light); background: rgba(99,102,241,.1); }
+.footer-col-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px; color: var(--text); }
+.footer-links { list-style: none; display: grid; gap: 10px; }
+.footer-links a { color: var(--muted); text-decoration: none; font-size: .85rem; transition: color .2s; }
+.footer-links a:hover { color: var(--text); }
+.footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 28px; border-top: 1px solid var(--border); }
+.footer-copy { font-size: .78rem; color: var(--subtle); }
+.footer-legal { display: flex; gap: 20px; }
+.footer-legal a { color: var(--subtle); text-decoration: none; font-size: .78rem; transition: color .2s; }
+.footer-legal a:hover { color: var(--muted); }
+
+/* ── Reveal Animation ── */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s ease, transform .65s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+.reveal-delay-4 { transition-delay: .4s; }
+
+/* ── Mobile Menu ── */
+.mobile-menu {
+  display: none; position: fixed; top: 68px; left: 0; right: 0;
+  background: rgba(15,23,42,.97); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); padding: 20px 5%; z-index: 99;
+  flex-direction: column; gap: 0;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  color: var(--muted); text-decoration: none; font-size: .95rem; font-weight: 500;
+  padding: 14px 0; border-bottom: 1px solid var(--border); transition: color .2s;
+}
+.mobile-menu a:last-child { border-bottom: none; }
+.mobile-menu a:hover { color: var(--text); }
+
+/* ── Responsive ── */
+@media(max-width:1024px){
+  .hero-inner { grid-template-columns: 1fr; }
+  .dashboard-mockup { max-width: 480px; margin: 0 auto; animation: none; }
+  .features-grid { grid-template-columns: repeat(2,1fr); }
+  .showcase-block { grid-template-columns: 1fr; gap: 36px; }
+  .showcase-block.reverse { direction: ltr; }
+  .footer-top { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:768px){
+  .nav-links,.nav-actions .btn-ghost { display: none; }
+  .hamburger { display: flex; }
+  .trust-stats { grid-template-columns: repeat(2,1fr); }
+  .trust-stat { border-right: none; border-bottom: 1px solid var(--border); }
+  .trust-stat:nth-child(even) { border-right: none; }
+  .features-grid { grid-template-columns: 1fr; }
+  .steps-wrap { grid-template-columns: 1fr; gap: 32px; }
+  .steps-wrap::before { display: none; }
+  .benefits-grid { grid-template-columns: 1fr; }
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .footer-top { grid-template-columns: 1fr 1fr; }
+  .footer-bottom { flex-direction: column; gap: 14px; text-align: center; }
+}
+@media(max-width:480px){
+  .hero-ctas { flex-direction: column; }
+  .cta-ctas { flex-direction: column; align-items: center; }
+  .footer-top { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="13" fill="url(#lg1)" opacity=".15"/>
+      <circle cx="10" cy="12" r="5" fill="url(#lg1)"/>
+      <circle cx="19" cy="16" r="4" fill="url(#lg2)" opacity=".8"/>
+      <circle cx="14" cy="20" r="3" fill="url(#lg3)" opacity=".7"/>
+      <defs>
+        <linearGradient id="lg1" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#818CF8"/><stop offset="1" stop-color="#6366F1"/></linearGradient>
+        <linearGradient id="lg2" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#8B5CF6"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+        <linearGradient id="lg3" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#EC4899"/><stop offset="1" stop-color="#F43F5E"/></linearGradient>
+      </defs>
+    </svg>
+    Gatherly
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a href="#" class="btn btn-ghost">Sign In</a>
+    <a href="#" class="btn btn-primary">Get Started</a>
+  </div>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features">Features</a>
+  <a href="#how">How It Works</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#faq">FAQ</a>
+  <a href="#">Sign In</a>
+  <a href="#" style="color:var(--primary-light)">Get Started Free →</a>
+</div>
+
+<!-- Hero -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-badge"><span class="hero-badge-dot"></span>Now in public beta — free to start</div>
+      <h1 class="hero-title">Where Communities<br>and Events<br>Come Alive</h1>
+      <p class="hero-sub">Gatherly helps creators, clubs, organizations, and local groups build thriving communities and organize memorable events—all in one platform.</p>
+      <div class="hero-ctas">
+        <a href="#" class="btn btn-primary btn-large">Get Started Free</a>
+        <a href="#" class="btn btn-outline btn-large">Explore Communities</a>
+      </div>
+      <div class="hero-trust">
+        <div class="hero-avatars">
+          <span class="av1">SJ</span><span class="av2">DC</span><span class="av3">EW</span><span class="av4">MR</span>
+        </div>
+        <p class="hero-trust-text"><strong>10,000+ members</strong> already building on Gatherly</p>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="dashboard-mockup">
+        <div class="mock-topbar">
+          <span class="mock-dot md1"></span><span class="mock-dot md2"></span><span class="mock-dot md3"></span>
+          <div class="mock-title-bar">gatherly.app — Community Dashboard</div>
+        </div>
+        <div class="mock-body">
+          <div class="mock-row">
+            <div class="mock-card">
+              <div class="mock-card-label">Active Members</div>
+              <div class="mock-stat">2,841</div>
+              <div class="mock-badge badge-up">↑ 12% this week</div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-label">Events This Month</div>
+              <div class="mock-stat">24</div>
+              <div class="mock-badge badge-new">+ 3 new</div>
+            </div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-label">Upcoming Events</div>
+            <div class="mock-events-list">
+              <div class="mock-event">
+                <div class="mock-event-icon ei1">🎉</div>
+                <div class="mock-event-info">
+                  <div class="mock-event-name">Community Kickoff Night</div>
+                  <div class="mock-event-date">Dec 18 · 7:00 PM</div>
+                </div>
+                <div class="mock-event-count">142 going</div>
+              </div>
+              <div class="mock-event">
+                <div class="mock-event-icon ei2">🎨</div>
+                <div class="mock-event-info">
+                  <div class="mock-event-name">Design Sprint Workshop</div>
+                  <div class="mock-event-date">Dec 21 · 2:00 PM</div>
+                </div>
+                <div class="mock-event-count">89 going</div>
+              </div>
+              <div class="mock-event">
+                <div class="mock-event-icon ei3">💡</div>
+                <div class="mock-event-info">
+                  <div class="mock-event-name">Startup Pitch Night</div>
+                  <div class="mock-event-date">Jan 5 · 6:30 PM</div>
+                </div>
+                <div class="mock-event-count">211 going</div>
+              </div>
+            </div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-label">Member Activity</div>
+            <div class="mock-bar-section">
+              <div class="mock-bar-track"><div class="mock-bar-fill bf1"></div></div>
+              <div class="mock-bar-track"><div class="mock-bar-fill bf2"></div></div>
+              <div class="mock-bar-track"><div class="mock-bar-fill bf3"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust -->
+<section id="trust">
+  <div class="trust-inner">
+    <p class="trust-label">Trusted by Growing Communities</p>
+    <div class="trust-stats">
+      <div class="trust-stat reveal">
+        <div class="trust-num" data-count="10000">10,000+</div>
+        <div class="trust-desc">Members Worldwide</div>
+      </div>
+      <div class="trust-stat reveal reveal-delay-1">
+        <div class="trust-num">500+</div>
+        <div class="trust-desc">Active Communities</div>
+      </div>
+      <div class="trust-stat reveal reveal-delay-2">
+        <div class="trust-num">2,000+</div>
+        <div class="trust-desc">Events Hosted</div>
+      </div>
+      <div class="trust-stat reveal reveal-delay-3">
+        <div class="trust-num">95%</div>
+        <div class="trust-desc">Satisfaction Rate</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-inner">
+    <div class="text-center reveal">
+      <span class="section-tag">Features</span>
+      <h2 class="section-title">Everything You Need to Grow</h2>
+      <p class="section-sub mx-auto">Powerful tools designed to help you build, manage, and grow thriving communities with ease.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon fi1">👥</div>
+        <h3 class="feature-title">Community Management</h3>
+        <p class="feature-desc">Create and manage communities with ease. Organize members, set roles, and keep everything structured as you scale.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon fi2">🗓️</div>
+        <h3 class="feature-title">Event Creation</h3>
+        <p class="feature-desc">Plan and host events in minutes. From simple meetups to large conferences, our tools handle all the logistics.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon fi3">💬</div>
+        <h3 class="feature-title">Member Engagement</h3>
+        <p class="feature-desc">Keep conversations active and meaningful. Discussion boards, announcements, and direct messaging built-in.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon fi4">📊</div>
+        <h3 class="feature-title">Analytics Dashboard</h3>
+        <p class="feature-desc">Track participation and growth with real-time analytics. Understand what's working and where to improve.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon fi5">🛡️</div>
+        <h3 class="feature-title">Role-Based Access</h3>
+        <p class="feature-desc">Manage admins, moderators, and members with granular permission controls. Keep your community safe and organized.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon fi6">🔔</div>
+        <h3 class="feature-title">Notifications & Updates</h3>
+        <p class="feature-desc">Never miss important announcements. Smart notifications keep everyone in the loop at the right time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section id="how">
+  <div class="section-inner">
+    <div class="text-center reveal">
+      <span class="section-tag">Process</span>
+      <h2 class="section-title">Get Started in Four Simple Steps</h2>
+      <p class="section-sub mx-auto">From zero to a thriving community in minutes. No technical skills required.</p>
+    </div>
+    <div class="steps-wrap">
+      <div class="step reveal reveal-delay-1">
+        <div class="step-num">01</div>
+        <h3 class="step-title">Create Your Community</h3>
+        <p class="step-desc">Set up your community profile, choose a category, and customize your space in minutes.</p>
+      </div>
+      <div class="step reveal reveal-delay-2">
+        <div class="step-num">02</div>
+        <h3 class="step-title">Invite Members</h3>
+        <p class="step-desc">Share your community link or send direct invites. Members join instantly with a single click.</p>
+      </div>
+      <div class="step reveal reveal-delay-3">
+        <div class="step-num">03</div>
+        <h3 class="step-title">Organize Events</h3>
+        <p class="step-desc">Create events with registration forms, schedules, and RSVP management built in automatically.</p>
+      </div>
+      <div class="step reveal reveal-delay-4">
+        <div class="step-num">04</div>
+        <h3 class="step-title">Engage and Grow</h3>
+        <p class="step-desc">Use analytics and engagement tools to keep your community active and growing every day.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Product Showcase -->
+<section id="showcase">
+  <div class="section-inner">
+    <div class="text-center reveal" style="margin-bottom:72px">
+      <span class="section-tag">Product</span>
+      <h2 class="section-title">Designed for Modern Communities</h2>
+      <p class="section-sub mx-auto">Every feature crafted with community builders in mind — intuitive, powerful, and beautiful.</p>
+    </div>
+
+    <div class="showcase-block reveal">
+      <div class="showcase-text">
+        <p class="showcase-eyebrow">Community Dashboard</p>
+        <h3 class="showcase-title">Your Community at a Glance</h3>
+        <p class="showcase-desc">Get a complete picture of member activity, ongoing discussions, and engagement metrics in one clean dashboard. Know exactly how your community is doing at any moment.</p>
+        <ul class="showcase-list">
+          <li>Real-time member activity feed</li>
+          <li>Engagement metrics and trends</li>
+          <li>Custom dashboard widgets</li>
+          <li>Member growth tracking</li>
+        </ul>
+      </div>
+      <div class="showcase-visual">
+        <div class="sv-header">
+          <span class="sv-header-title">Community Analytics</span>
+          <div class="sv-header-actions"><div class="sv-ha"></div><div class="sv-ha"></div></div>
+        </div>
+        <div class="sv-body">
+          <div class="sv-chart">
+            <div class="sv-bar" style="height:40%"></div>
+            <div class="sv-bar" style="height:60%"></div>
+            <div class="sv-bar" style="height:55%"></div>
+            <div class="sv-bar active" style="height:80%"></div>
+            <div class="sv-bar" style="height:72%"></div>
+            <div class="sv-bar active" style="height:90%"></div>
+            <div class="sv-bar" style="height:85%"></div>
+            <div class="sv-bar" style="height:70%"></div>
+          </div>
+          <div class="sv-metrics">
+            <div class="sv-metric">
+              <div class="sv-metric-val" style="color:var(--primary-light)">2.8K</div>
+              <div class="sv-metric-label">Members</div>
+            </div>
+            <div class="sv-metric">
+              <div class="sv-metric-val" style="color:var(--accent)">94%</div>
+              <div class="sv-metric-label">Retention</div>
+            </div>
+            <div class="sv-metric">
+              <div class="sv-metric-val" style="color:#10B981">+21%</div>
+              <div class="sv-metric-label">Growth</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase-block reverse reveal">
+      <div class="showcase-text">
+        <p class="showcase-eyebrow">Event Management</p>
+        <h3 class="showcase-title">Events That Run Themselves</h3>
+        <p class="showcase-desc">Create event pages with registration forms, automated reminders, attendee lists, and check-in tools — all in one place. Focus on the experience, not the logistics.</p>
+        <ul class="showcase-list">
+          <li>Drag-and-drop event builder</li>
+          <li>Automated registration & reminders</li>
+          <li>Attendee management & check-in</li>
+          <li>Post-event feedback collection</li>
+        </ul>
+      </div>
+      <div class="showcase-visual">
+        <div class="sv-header">
+          <span class="sv-header-title">Upcoming Events</span>
+          <div class="sv-header-actions"><div class="sv-ha"></div><div class="sv-ha"></div></div>
+        </div>
+        <div class="sv-body">
+          <div class="sv-events">
+            <div class="sv-event-row">
+              <div class="sv-event-icon" style="background:rgba(99,102,241,.2)">🎉</div>
+              <div>
+                <div class="sv-event-name">Community Kickoff Night</div>
+                <div class="sv-event-meta">Dec 18 · 142 registered</div>
+              </div>
+              <span class="sv-event-tag tag-live">Live</span>
+            </div>
+            <div class="sv-event-row">
+              <div class="sv-event-icon" style="background:rgba(236,72,153,.2)">🎨</div>
+              <div>
+                <div class="sv-event-name">Design Sprint Workshop</div>
+                <div class="sv-event-meta">Dec 21 · 89 registered</div>
+              </div>
+              <span class="sv-event-tag tag-soon">Soon</span>
+            </div>
+            <div class="sv-event-row">
+              <div class="sv-event-icon" style="background:rgba(6,182,212,.2)">💡</div>
+              <div>
+                <div class="sv-event-name">Startup Pitch Night</div>
+                <div class="sv-event-meta">Jan 5 · 211 registered</div>
+              </div>
+              <span class="sv-event-tag tag-reg">Open</span>
+            </div>
+            <div class="sv-event-row">
+              <div class="sv-event-icon" style="background:rgba(16,185,129,.2)">🤝</div>
+              <div>
+                <div class="sv-event-name">Networking Mixer</div>
+                <div class="sv-event-meta">Jan 12 · 56 registered</div>
+              </div>
+              <span class="sv-event-tag tag-reg">Open</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase-block reveal">
+      <div class="showcase-text">
+        <p class="showcase-eyebrow">Community Insights</p>
+        <h3 class="showcase-title">Data-Driven Growth</h3>
+        <p class="showcase-desc">Understand your community's growth trends with powerful analytics. See which events drive the most engagement, when members are most active, and where to focus your energy.</p>
+        <ul class="showcase-list">
+          <li>Growth trend reports</li>
+          <li>Event performance analytics</li>
+          <li>Member engagement scoring</li>
+          <li>Exportable data & reports</li>
+        </ul>
+      </div>
+      <div class="showcase-visual">
+        <div class="sv-header">
+          <span class="sv-header-title">Community Insights</span>
+          <div class="sv-header-actions"><div class="sv-ha"></div><div class="sv-ha"></div></div>
+        </div>
+        <div class="sv-body">
+          <div class="sv-insight">
+            <div class="sv-insight-row">
+              <span class="sv-insight-label">New Members</span>
+              <div class="sv-insight-track"><div class="sv-insight-bar ib1" style="width:82%"></div></div>
+              <span class="sv-insight-pct" style="color:var(--primary-light)">82%</span>
+            </div>
+            <div class="sv-insight-row">
+              <span class="sv-insight-label">Event Attendance</span>
+              <div class="sv-insight-track"><div class="sv-insight-bar ib2" style="width:71%"></div></div>
+              <span class="sv-insight-pct" style="color:var(--accent)">71%</span>
+            </div>
+            <div class="sv-insight-row">
+              <span class="sv-insight-label">Discussions</span>
+              <div class="sv-insight-track"><div class="sv-insight-bar ib3" style="width:58%"></div></div>
+              <span class="sv-insight-pct" style="color:#06B6D4">58%</span>
+            </div>
+            <div class="sv-insight-row">
+              <span class="sv-insight-label">Retention</span>
+              <div class="sv-insight-track"><div class="sv-insight-bar ib4" style="width:94%"></div></div>
+              <span class="sv-insight-pct" style="color:#10B981">94%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Benefits -->
+<section id="benefits">
+  <div class="section-inner">
+    <div class="text-center reveal">
+      <span class="section-tag">Benefits</span>
+      <h2 class="section-title">Built for Everyone</h2>
+      <p class="section-sub mx-auto">Whether you're a solo creator or a large organization, Gatherly scales with you.</p>
+    </div>
+    <div class="benefits-grid">
+      <div class="benefit-card reveal reveal-delay-1">
+        <div class="benefit-icon-wrap bi1">🏆</div>
+        <h3 class="benefit-title">For Community Leaders</h3>
+        <p class="benefit-desc">Build stronger communities and create lasting connections among your members.</p>
+        <ul class="benefit-list">
+          <li>Easy community setup</li>
+          <li>Member growth tools</li>
+          <li>Engagement analytics</li>
+          <li>Branded community page</li>
+        </ul>
+      </div>
+      <div class="benefit-card reveal reveal-delay-2">
+        <div class="benefit-icon-wrap bi2">🏢</div>
+        <h3 class="benefit-title">For Organizations</h3>
+        <p class="benefit-desc">Coordinate members efficiently across departments, chapters, and groups.</p>
+        <ul class="benefit-list">
+          <li>Multi-team management</li>
+          <li>Role-based permissions</li>
+          <li>Organization-wide events</li>
+          <li>Compliance & data controls</li>
+        </ul>
+      </div>
+      <div class="benefit-card reveal reveal-delay-3">
+        <div class="benefit-icon-wrap bi3">🎟️</div>
+        <h3 class="benefit-title">For Event Organizers</h3>
+        <p class="benefit-desc">Host successful events effortlessly with end-to-end planning and management.</p>
+        <ul class="benefit-list">
+          <li>Ticketing & registration</li>
+          <li>Attendee communication</li>
+          <li>Post-event analytics</li>
+          <li>Recurring event series</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section id="testimonials">
+  <div class="section-inner">
+    <div class="text-center reveal">
+      <span class="section-tag">Testimonials</span>
+      <h2 class="section-title">Loved by Community Builders</h2>
+      <p class="section-sub mx-auto">Thousands of communities trust Gatherly to bring their members together.</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-quote">"Gatherly completely transformed how our student club manages events and communicates with members. It's genuinely the only tool we need."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar ta1">SJ</div>
+          <div>
+            <div class="testimonial-name">Sarah Johnson</div>
+            <div class="testimonial-role">Student Club President, UC Berkeley</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-quote">"Managing hundreds of members and dozens of monthly events has never been easier. The analytics alone saved us hours of manual work every week."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar ta2">DC</div>
+          <div>
+            <div class="testimonial-name">David Chen</div>
+            <div class="testimonial-role">Community Director, TechHub NYC</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-3">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-quote">"Our member engagement increased significantly after switching to Gatherly. The event RSVP and reminder system alone made the difference."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar ta3">EW</div>
+          <div>
+            <div class="testimonial-name">Emma Williams</div>
+            <div class="testimonial-role">Founder, Creative Collective</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing">
+  <div class="section-inner">
+    <div class="text-center reveal">
+      <span class="section-tag">Pricing</span>
+      <h2 class="section-title">Simple, Transparent Pricing</h2>
+      <p class="section-sub mx-auto">Start for free. Upgrade when your community needs more. No surprises.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card reveal reveal-delay-1">
+        <div class="pricing-plan">Starter</div>
+        <div class="pricing-price">
+          <span class="pricing-amount">Free</span>
+        </div>
+        <p class="pricing-desc">Perfect for small groups just getting started.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="pf-check">✓</span>Up to 100 members</li>
+          <li><span class="pf-check">✓</span>5 events per month</li>
+          <li><span class="pf-check">✓</span>Basic community management</li>
+          <li><span class="pf-check">✓</span>Standard analytics</li>
+          <li><span class="pf-check">✓</span>Email support</li>
+        </ul>
+        <a href="#" class="btn-pricing-ghost">Get Started Free</a>
+      </div>
+      <div class="pricing-card featured reveal reveal-delay-2">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-plan">Pro</div>
+        <div class="pricing-price">
+          <span class="pricing-amount">$12</span>
+          <span class="pricing-period">/month</span>
+        </div>
+        <p class="pricing-desc">For growing communities that need more power.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="pf-check">✓</span>Unlimited members</li>
+          <li><span class="pf-check">✓</span>Unlimited events</li>
+          <li><span class="pf-check">✓</span>Advanced analytics & insights</li>
+          <li><span class="pf-check">✓</span>Custom community branding</li>
+          <li><span class="pf-check">✓</span>Priority support</li>
+          <li><span class="pf-check">✓</span>Role-based access controls</li>
+        </ul>
+        <a href="#" class="btn-pricing-primary">Start Pro Trial</a>
+      </div>
+      <div class="pricing-card reveal reveal-delay-3">
+        <div class="pricing-plan">Enterprise</div>
+        <div class="pricing-price">
+          <span class="pricing-amount">Custom</span>
+        </div>
+        <p class="pricing-desc">For large organizations with complex needs.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="pf-check">✓</span>Everything in Pro</li>
+          <li><span class="pf-check">✓</span>Custom integrations & API</li>
+          <li><span class="pf-check">✓</span>Dedicated account manager</li>
+          <li><span class="pf-check">✓</span>Advanced permissions & SSO</li>
+          <li><span class="pf-check">✓</span>SLA & uptime guarantee</li>
+          <li><span class="pf-check">✓</span>White-label options</li>
+        </ul>
+        <a href="#" class="btn-pricing-ghost">Contact Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-inner">
+    <div class="text-center reveal">
+      <span class="section-tag">FAQ</span>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <p class="section-sub mx-auto">Everything you need to know about Gatherly. Can't find your answer? Chat with us.</p>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <div class="faq-q">What is Gatherly?<span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Gatherly is an all-in-one platform for building and managing communities and events. It combines community management tools, event creation, member engagement features, and analytics — all in a single, beautifully designed product. Whether you run a student club, a professional network, or a large organization, Gatherly makes it easy to grow and manage your community.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q">Can I create unlimited events?<span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">On the free Starter plan, you can create up to 5 events per month. With our Pro plan ($12/month), you can create unlimited events of any type — from small meetups to large conferences. Enterprise plans also include unlimited events with additional features like custom registration forms and attendee data exports.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q">Is Gatherly free to use?<span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Yes! Gatherly offers a free Starter plan that includes up to 100 members, basic community management tools, and up to 5 events per month. You can use Gatherly for free indefinitely. When your community grows and needs more features, you can upgrade to our Pro or Enterprise plans anytime.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q">Can organizations and businesses use Gatherly?<span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Absolutely. Gatherly is built for organizations of all sizes — from small nonprofits and student clubs to large enterprises. Our Enterprise plan includes custom integrations, SSO, advanced permissions, dedicated support, and white-label options tailored to organizational needs. Contact our sales team to learn more about our Enterprise offerings.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q">Is there mobile support?<span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Yes! Gatherly is fully responsive and works seamlessly on all devices — desktop, tablet, and mobile. We also have native iOS and Android apps currently in beta, which offer push notifications, quick event check-ins, and an optimized mobile community experience. Sign up and join the waitlist to get early access.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="section-inner">
+    <div class="cta-inner reveal">
+      <span class="section-tag" style="margin-bottom:20px">Get Started</span>
+      <h2 class="cta-title">Ready to Build Your Community?</h2>
+      <p class="cta-sub">Start organizing events and growing meaningful connections today. No credit card required — free forever on the Starter plan.</p>
+      <div class="cta-ctas">
+        <a href="#" class="btn btn-primary btn-large">Start Free</a>
+        <a href="#" class="btn btn-outline btn-large">Book a Demo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <a href="#" class="footer-brand-logo">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+            <circle cx="10" cy="12" r="5" fill="url(#flg1)"/>
+            <circle cx="19" cy="16" r="4" fill="url(#flg2)" opacity=".8"/>
+            <circle cx="14" cy="20" r="3" fill="url(#flg3)" opacity=".7"/>
+            <defs>
+              <linearGradient id="flg1" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#818CF8"/><stop offset="1" stop-color="#6366F1"/></linearGradient>
+              <linearGradient id="flg2" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#8B5CF6"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+              <linearGradient id="flg3" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#EC4899"/><stop offset="1" stop-color="#F43F5E"/></linearGradient>
+            </defs>
+          </svg>
+          Gatherly
+        </a>
+        <p class="footer-tagline">Build Communities. Create Events. Bring People Together.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social">𝕏</a>
+          <a href="#" class="footer-social">in</a>
+          <a href="#" class="footer-social">ig</a>
+          <a href="#" class="footer-social">yt</a>
+        </div>
+      </div>
+      <div>
+        <p class="footer-col-title">Product</p>
+        <ul class="footer-links">
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Updates</a></li>
+          <li><a href="#">Roadmap</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-col-title">Resources</p>
+        <ul class="footer-links">
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Community</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-col-title">Company</p>
+        <ul class="footer-links">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-col-title">Legal</p>
+        <ul class="footer-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 Gatherly, Inc. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── Scroll Reveal ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── FAQ Accordion ──
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const answer = item.querySelector('.faq-a');
+    const isOpen = item.classList.contains('open');
+    // close all
+    document.querySelectorAll('.faq-item').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.faq-a').style.maxHeight = '0';
+    });
+    if (!isOpen) {
+      item.classList.add('open');
+      answer.style.maxHeight = answer.scrollHeight + 'px';
+    }
+  });
+});
+
+// ── Hamburger ──
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+hamburger.addEventListener('click', () => {
+  mobileMenu.classList.toggle('open');
+  const spans = hamburger.querySelectorAll('span');
+  if (mobileMenu.classList.contains('open')) {
+    spans[0].style.transform = 'translateY(7px) rotate(45deg)';
+    spans[1].style.opacity = '0';
+    spans[2].style.transform = 'translateY(-7px) rotate(-45deg)';
+  } else {
+    spans.forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
+  }
+});
+mobileMenu.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    mobileMenu.classList.remove('open');
+    hamburger.querySelectorAll('span').forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
+  });
+});
+
+// ── Nav scroll bg ──
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  nav.style.background = window.scrollY > 40 ? 'rgba(15,23,42,0.95)' : 'rgba(15,23,42,0.75)';
+});
+
+// ── Count-up for trust stats ──
+const countEls = document.querySelectorAll('.trust-num');
+const countObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !e.target.dataset.counted) {
+      e.target.dataset.counted = '1';
+      const text = e.target.textContent;
+      // just add a shimmer class for visual flair
+      e.target.style.transition = 'opacity .4s';
+      e.target.style.opacity = '0';
+      setTimeout(() => { e.target.style.opacity = '1'; }, 200);
+    }
+  });
+}, { threshold: .5 });
+countEls.forEach(el => countObserver.observe(el));
+</script>
+</body>
+</html>

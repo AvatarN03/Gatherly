@@ -14,6 +14,8 @@ export const COMMUNITY_CATEGORIES = [
   { value: 'Others',        label: 'Others' },
 ] as const
 
+export type CommunityCategory = typeof COMMUNITY_CATEGORIES[number]['value']
+
 export const EVENT_SUBCATEGORIES: Record<CommunityCategory, { value: string; label: string }[]> = {
   General: [
     { value: 'Meetup',        label: 'Meetup' },
@@ -104,7 +106,118 @@ export const EVENT_SUBCATEGORIES: Record<CommunityCategory, { value: string; lab
     { value: 'Others',        label: 'Others' },
   ],
 }
+export type EventSubCategory =
+  (typeof EVENT_SUBCATEGORIES)[CommunityCategory][number]["value"]
 
-export type EventSubCategory = typeof EVENT_SUBCATEGORIES[CommunityCategory][number]['value']
 
-export type CommunityCategory = typeof COMMUNITY_CATEGORIES[number]['value']
+
+
+// marketing 
+import {
+  Users,
+  Calendar,
+  Ticket,
+  Shield,
+  UserPlus,
+  BadgeCheck,
+  Search,
+  LayoutDashboard,
+} from "lucide-react";
+
+export const GATHERLY_FEATURES = [
+  {
+    title: "Community Management",
+    description:
+      "Create, manage, and grow communities with role-based access control and member management.",
+    icon: Users,
+    image:"/features/community.svg",
+    class:"col-span-12 md:col-span-7"
+  },
+  {
+    title: "Event Creation",
+    description:
+      "Organize online and offline events with detailed event information and scheduling.",
+    icon: Calendar,
+    image:"/features/team-collab.svg",
+    class:"col-span-12 md:col-span-5"
+  },
+  {
+    title: "Event Registration",
+    description:
+      "Allow users to register for events and track attendance seamlessly.",
+    icon: Ticket,
+    image:"/features/event-plan.svg",
+    class:"col-span-12 md:col-span-5"
+  },
+  {
+    title: "Membership Requests",
+    description:
+      "Handle join requests, approvals, and community participation efficiently.",
+    icon: UserPlus,
+    image:"/features/membership.svg",
+    class:"col-span-12 md:col-span-7"
+  },
+  {
+    title: "Community Verification",
+    description:
+      "Verified communities help users identify authentic organizers and groups.",
+    icon: BadgeCheck,
+    image:"/features/verify.svg",
+    class:"col-span-12 md:col-span-6"
+  },
+  {
+    title: "Role-Based Permissions",
+    description:
+      "Assign admin, moderator, and member roles with customized permissions.",
+    icon: Shield,
+    image:"/features/role.svg",
+    class:"col-span-12 md:col-span-6"
+  },
+  {
+    title: "Event Discovery",
+    description:
+      "Browse and discover communities and events based on interests.",
+    icon: Search,
+    image:"/features/discover.svg",
+    class:"col-span-12 md:col-span-4"
+  },
+  {
+    title: "Organizer Dashboard",
+    description:
+      "Monitor communities, events, registrations, and engagement from one place.",
+    icon: LayoutDashboard,
+    image:"/features/dashboard.svg",
+    class:"col-span-12 md:col-span-8"
+  },
+];
+
+export const steps = [
+  {
+    icon: "🏡",
+    title: "Create your space",
+    desc: "Set up your community in minutes with a name, purpose, and vibe.",
+    side: "left",
+    position: "top-[15%]",
+  },
+  {
+    icon: "📅",
+    title: "Host events",
+    desc: "Plan and publish events your members will actually show up for.",
+    side: "right",
+    position: "top-[42%]",
+  },
+  {
+    icon: "🤝",
+    title: "Grow together",
+    desc: "Watch connections deepen as your community finds its rhythm.",
+    side: "left",
+    position: "top-[68%]",
+  },
+]
+
+export const SAMPLE_EVENTS = [
+  { emoji: "🎨", title: "Sunday Sketch Club",   meta: "Tomorrow · 10:00 AM · 14 going", free: true,  price: "" },
+  { emoji: "🎵", title: "Rooftop Jazz Night",    meta: "Sat, 7 PM · 38 going",           free: false, price: "₹199" },
+  { emoji: "📚", title: "Book Club — July pick", meta: "Sun, 4 PM · 9 going",            free: true,  price: "" },
+  { emoji: "🏃", title: "Morning Run Group",     meta: "Every Mon · 6:30 AM · 22 going", free: true,  price: "" },
+]
