@@ -3,7 +3,7 @@ import { Radar, Users } from "lucide-react"
 
 export const Hero = () => {
     return (
-        <section className="w-full py-20 px-4 max-w-5xl mx-auto space-y-25 h-dvh ">
+        <section id="home" className="w-full py-20 px-4 max-w-5xl mx-auto space-y-25 h-dvh ">
             <h1 className="text-4xl md:text-6xl font-bold leading-[1.35] tracking-wide mb-6 text-center">
                 Communities{" "}
                 <span className="text-purple-400 relative inline-block">

@@ -39,21 +39,33 @@ export const createCommunity = async (req: CustomRequest, res: Response) => {
 };
 
 export const getCommunities = async (req: Request, res: Response) => {
-  const search = req.query.search as string;
+  const search = (req.query.search as string) || "";
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 9;
+  const skip = (page - 1) * limit;
 
-  const communities = await prisma.community.findMany({
-    where: {
-      name: {
-        contains: search,
-        mode: "insensitive",
-      },
+  const where = {
+    name: {
+      contains: search,
+      mode: "insensitive" as const,
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+  };
+
+  const [communities, total] = await prisma.$transaction([
+    prisma.community.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.community.count({ where }),
+  ]);
+
+  res.json({
+    communities,
+    hasMore: skip + communities.length < total,
+    nextPage: page + 1,
   });
-
-  res.json(communities);
 };
 
 export const getMyCommunities = async (req: Request, res: Response) => {

@@ -54,7 +54,7 @@ export const HTW = () => {
 
 
     return (
-        <section className="w-full min-h-dvh py-25 md:px-12 relative">
+        <section id="htw" className="w-full min-h-dvh py-25 md:px-12 relative">
 
             <div className="w-full flex items-center gap-4 py-8 mb-8">
                 {/* Left fading line */}
@@ -99,7 +99,7 @@ export const HTW = () => {
                             key={i}
                             ref={el => { if (el) stepRefs.current[i] = el }}
                             className={`
-                absolute ${step.position} backdrop-blur-md border-2 border-cocoa rounded-2xl bg-fog/10 text-deep-ocean shadow-xl
+                absolute ${step.position} backdrop-blur-md bg-lavender/20 border-2 border-cocoa rounded-2xl bg-fog/10 text-deep-ocean shadow-xl
                 ${step.side === "left" ? "left-0 md:left-16 " : "right-0 md:right-16"}
                 w-full md:max-w-120
               `}

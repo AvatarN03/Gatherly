@@ -2,7 +2,7 @@ import { GATHERLY_FEATURES } from '../../constant';
 
 export const Features = () => {
     return (
-        <section className="w-full min-h-dvh py-25 md:px-12">
+        <section id="features" className="w-full min-h-dvh py-25 md:px-12">
             <div className="w-full flex items-center gap-4 py-8">
                 {/* Left fading line */}
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent to-orchid/70" />
@@ -33,7 +33,7 @@ export const Features = () => {
                         <div
                             key={i}
                             className={`${bgColor} ${feature.class} border-2 
-         rounded-2xl p-5 flex flex-col gap-3 min-h-72 relative group
+         rounded-2xl p-5 flex flex-col gap-3 h-96 relative group
          hover:border-orchid/30 transition-colors duration-200`}
                         >
                             {/* Icon + title row */}

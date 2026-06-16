@@ -1,13 +1,18 @@
+import type { EventSubCategory } from "../constant"
+import type { CommunityCategory } from "../constant"
+import type { Membership } from "./community"
+
 export type EventItem = {
-  id?: string | number
   title: string
   date: string
   time: string
+  createdBy: string
   location: string
   description: string
   communityId: string
   imageUrl?: string
   imageFileId?: string
-  category: string
-  subCategory: string
+  category: CommunityCategory | ""
+  subCategory: EventSubCategory | ""
+  members: Membership[]
 }

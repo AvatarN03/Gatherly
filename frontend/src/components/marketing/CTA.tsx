@@ -14,7 +14,7 @@ export const CTA = () => {
         </div>
 
         <div className="relative z-20">
-          <h1 className="text-4xl mb-5 font-bold text-lavender">CTA</h1>
+          <h1 className="text-4xl mb-5 font-semibold tracking-wider text-lavender">Start today!!</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 border border-white/10 rounded-2xl overflow-hidden ">
 
             {/* Left — copy + CTAs */}

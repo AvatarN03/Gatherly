@@ -221,3 +221,9 @@ export const SAMPLE_EVENTS = [
   { emoji: "📚", title: "Book Club — July pick", meta: "Sun, 4 PM · 9 going",            free: true,  price: "" },
   { emoji: "🏃", title: "Morning Run Group",     meta: "Every Mon · 6:30 AM · 22 going", free: true,  price: "" },
 ]
+
+
+export const SKELETON_COUNT = 9
+
+export const inputClass =
+  'w-full px-4 py-2.5 bg-slate-800 border border-fog/20 rounded-lg text-mist placeholder-fog/40 text-sm focus:outline-none focus:border-lavender transition-colors'

@@ -1,3 +1,5 @@
+import type { RefObject } from "react"
+
 export interface Community {
   id: string
   name: string
@@ -18,8 +20,9 @@ export interface Membership {
   communityId: string
   role: CommunityRole
   createdAt: string
-  user?: User
+  user: User
   community?: Community
+  status: RequestStatus
 }
 
 export interface MembershipRequest {
@@ -58,3 +61,15 @@ export type UpdateCommunityDto = Partial<CreateCommunityDto>
 export interface VerifyCommunityResponse {
   message: string
 }
+
+
+export interface CommunityGridType {
+  communities: Community[]
+  isLoading: boolean
+  isFetchingNextPage: boolean
+  hasNextPage: boolean
+  search: string
+  sentinelRef: RefObject<HTMLDivElement | null>
+}
+
+export type CommunityTab = "overview" | "events" | "members" | "requests";

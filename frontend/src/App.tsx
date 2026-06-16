@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { Toaster } from 'react-hot-toast';
 
 import Communities from "./pages/communities"
 import CommunityId from "./pages/communities/community-id"
@@ -18,6 +19,7 @@ import DashBoard from "./pages/dashboard"
 import { Navbar } from "./components/Navbar"
 import Marketing from "./pages/marketing"
 import Wrapper from "./components/Wrapper"
+import { Footer } from "./components/Footer"
 
 
 const App = () => {
@@ -44,6 +46,8 @@ const App = () => {
 
         </Routes>
       </Wrapper>
+      <Footer />
+      <Toaster position="bottom-right"/>
     </BrowserRouter>
   )
 }

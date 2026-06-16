@@ -30,6 +30,7 @@ body {
 
 html {
   background-color: var(--color-deep-ocean); 
+  scroll-behavior: smooth;
 
   background-image:
     /* Primary bloom — bright teal top-left, the main light source */

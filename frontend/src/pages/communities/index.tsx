@@ -1,57 +1,87 @@
-import { useState } from 'react'
-import { useCommunitiesQuery } from '../../hooks/useCommunities'
-import { Link } from 'react-router-dom';
-import { useDebounce } from '../../hooks/useDebounceValue';
+import { useCallback, useState } from 'react'
+
+import CommunitiesHeader from '../../components/communities/CommunityHeader'
+import CommunityGrid from '../../components/communities/CommunityGrid'
+
+import { useDebounce } from '../../hooks/useDebounceValue'
+import { useCommunitiesInfiniteQuery } from '../../hooks/useCommunities'
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
+import toast from 'react-hot-toast'
+
 
 const Communities = () => {
-    const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 500)
 
-    const debouncedSearch = useDebounce(search, 500);
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+    error,
+  } = useCommunitiesInfiniteQuery(debouncedSearch)
 
-    const {
-        data: communities,
-        isLoading,
-        error,
-    } = useCommunitiesQuery(debouncedSearch);
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  const sentinelRef = useIntersectionObserver(handleLoadMore, {
+    rootMargin: '200px',
+  })
 
-    if (isLoading) return <div className="p-6 text-center">Loading communities...</div>
-    if (error) return <div className="p-6 text-center text-red-500">Error loading communities</div>
+  const communities = data?.pages.flatMap((page) => page.communities) ?? []
 
-    return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Communities</h1>
-                <input
-                    type="text"
-                    placeholder="Search communities..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full p-3 border rounded mb-6"
-                />
-                <Link to={"/communities/create"}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                    Create Community
-                </Link>
-            </div>
-
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {communities && communities.map((community) => (
-                    <Link to={`/communities/${community.id}`} key={community.id} className="bg-white p-4 rounded shadow hover:shadow-lg transition">
-                        <div key={community.id} className="bg-white p-4 rounded shadow hover:shadow-lg transition">
-                            <img src={community.imageUrl} alt={community.name} className="w-full h-48 object-cover rounded mb-2" />
-                            <h2 className="text-xl font-semibold">{community.name}</h2>
-                            <p className="text-gray-600 text-sm mb-2">{community.description}</p>
-                            <p className="text-gray-500 text-xs mb-4">📍 {community.location}</p>
-
-                        </div>
-                    </Link>
-                ))}
-            </div>
-        </div>
+  const handleRetry = async () => {
+    await toast.promise(
+      refetch(),
+      {
+        loading: 'Reloading communities...',
+        success: 'Communities loaded successfully',
+        error: 'Failed to load communities',
+      }
     )
+  }
+
+
+
+
+  if (error) return (
+    <div className=" bg-night/50 flex items-start justify-center py-20 md:px-4">
+      <div className="flex flex-col items-center gap-4 w-full">
+        <div className="p-4 bg-red-500/10 rounded-3xl flex items-center justify-between gap-3 w-full">
+          <AlertTriangle className="w-64 h-64 text-red-400" />
+          <div className="flex flex-col  text-right gap-8">
+            <p className="text-lavender text-7xl font-medium mb-1">Something went wrong</p>
+            <p className="text-fog text-4xl">Failed to load communities</p>
+          </div>
+        </div>
+        <button
+          onClick={handleRetry}
+          className="flex items-center gap-2 px-4 py-2 bg-slate hover:bg-slate-800 border border-purple-900 hover:border-purple-400 text-mist text-3xl rounded-lg transition-all cursor-pointer"
+        >
+          <RefreshCw className="w-14 h-14" />
+          Try again
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-forest-teal/50 relative">
+      <CommunitiesHeader search={search} onChange={setSearch} />
+      <CommunityGrid
+        communities={communities}
+        isLoading={isLoading}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={!!hasNextPage}
+        search={search}
+        sentinelRef={sentinelRef}
+      />
+    </div>
+  )
 }
 
 export default Communities

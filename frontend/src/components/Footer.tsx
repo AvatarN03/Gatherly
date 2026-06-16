@@ -72,9 +72,9 @@ export const Footer = () => {
             </div>
 
             {/* Bottom bar */}
-            <div className="flex items-center justify-between border-t border-white/10 pt-5">
+            <div className="flex items-center justify-between border-t border-white/10 pt-5 mt-2">
                 <p className="text-xs text-fog/40">© 2026 <span className="text-lavender">Gatherly</span>. All rights reserved.</p>
-                <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-4">
                     {["Privacy", "Terms", "Cookies"].map(label => (
                         <a key={label} className="text-xs text-fog/40 hover:text-fog/70 transition-colors cursor-pointer">
                             {label}
