@@ -70,11 +70,11 @@ export const Navbar = () => {
 
               </a></li>
             <li>
-              <a href="/#home" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                AboutUs
+              <a href="/about" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                AboutUs
 
               </a></li>
             <li>
-              <a href="/#home" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Contact us
+              <a href="/contact" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Contact us
 
               </a></li>
 

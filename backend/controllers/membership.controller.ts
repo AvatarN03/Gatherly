@@ -47,7 +47,7 @@ export const joinCommunity = async (
 
     res.status(201).json(request);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ error: "Failed to send request" });
   }
 };
@@ -68,6 +68,7 @@ export const getMembers = async (
             name: true,
             email: true,
             imageUrl: true,
+            createdAt: true,
           },
         },
       },
@@ -119,17 +120,15 @@ export const leaveCommunity = async (
   }
 };
 
-
 export const getMyRequests = async (req: Request, res: Response) => {
   try {
-    const userId = req?.user?.id;
-
-    if (!userId) {
+    const user = req?.user;
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const requests = await prisma.membershipRequest.findMany({
-      where: { userId },
+      where: { userId: user.id },
       include: {
         community: true,
       },
@@ -141,6 +140,164 @@ export const getMyRequests = async (req: Request, res: Response) => {
   }
 };
 
+export const getMyRequestForCommunity = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
+  try {
+    const user = req?.user;
+    const { id: communityId } = req.params;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const request = await prisma.membershipRequest.findFirst({
+      where: { userId: user.id, communityId },
+    });
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user request" });
+  }
+};
+
+export const removeCommunityMember = async (
+  req: Request<{ id: string; memberId: string }>,
+  res: Response,
+) => {
+  try {
+    const user = req?.user;
+    const { id: communityId, memberId } = req.params;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Check if the requester is OWNER/ADMIN
+    const requesterMembership = await prisma.membership.findUnique({
+      where: {
+        userId_communityId: { userId: user.id, communityId },
+      },
+    });
+
+    if (
+      !requesterMembership ||
+      (requesterMembership.role !== "OWNER" && requesterMembership.role !== "ADMIN")
+    ) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    const member = await prisma.membership.findUnique({
+      where: {
+        id: memberId,
+      },
+    });
+    if (!member) {
+      return res.status(404).json({ error: "Member not found" });
+    }
+
+    if (member.communityId !== communityId) {
+      return res.status(400).json({ error: "Member does not belong to this community" });
+    }
+
+    await prisma.membership.delete({
+      where: {
+        id: memberId,
+      },
+    });
+
+    res.json({ message: "Member removed successfully" });
+  }
+  catch (error) {
+    res.status(500).json({ error: "Failed to remove member" });
+  }
+};
+
+export const withdrawRequest = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
+  try {
+    const user = req?.user;
+    const { id: communityId } = req.params;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const request = await prisma.membershipRequest.findFirst({
+      where: { userId: user.id, communityId },
+    });
+
+    if (!request) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    await prisma.membershipRequest.delete({
+      where: { id: request.id },
+    });
+
+    res.json({ message: "Request withdrawn successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to withdraw request" });
+  }
+};
+
+export const updateMemberRole = async (
+  req: Request<{ id: string; memberId: string }>,
+  res: Response,
+) => {
+  try {
+    const user = req?.user;
+    const { id: communityId, memberId } = req.params;
+    const { role } = req.body;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Check if the requester is OWNER/ADMIN
+    const requesterMembership = await prisma.membership.findUnique({
+      where: {
+        userId_communityId: { userId: user.id, communityId },
+      },
+    });
+
+    if (
+      !requesterMembership ||
+      (requesterMembership.role !== "OWNER" &&
+        requesterMembership.role !== "ADMIN")
+    ) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    const member = await prisma.membership.findUnique({
+      where: {
+        id: memberId,
+      },
+    });
+
+    if (!member || member.communityId !== communityId) {
+      return res.status(404).json({
+        error: "Member not found in this community",
+      });
+    }
+
+    const updatedMembership = await prisma.membership.update({
+      where: {
+        id: memberId,
+      },
+      data: {
+        role,
+      },
+    });
+
+    res.json(updatedMembership);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
 
 //only owner/admin
 export const getCommunityRequests = async (
@@ -184,7 +341,7 @@ export const getCommunityRequests = async (
 
 export const handleRequest = async (
   req: Request<{ requestId: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const user = req.user;
@@ -260,4 +417,3 @@ export const handleRequest = async (
     });
   }
 };
-

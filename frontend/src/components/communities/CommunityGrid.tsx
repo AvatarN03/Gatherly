@@ -2,7 +2,7 @@ import CommunityCard from './CommunityCard'
 import Skeleton from '../Skeleton'
 
 import { SKELETON_COUNT } from '../../constant'
-import type { CommunityGridType } from '../../types/community'
+import type { CommunityGridType } from '../../types'
 
 
 

@@ -1,3 +1,19 @@
+import {
+  Users,
+  Calendar,
+  Ticket,
+  Shield,
+  UserPlus,
+  BadgeCheck,
+  Search,
+  LayoutDashboard,
+  Crown,
+  ShieldCheck,
+  Clock,
+  UserCheck,
+  UserX,
+} from "lucide-react";
+
 export const COMMUNITY_CATEGORIES = [
   { value: 'General',       label: 'General' },
   { value: 'Technology',    label: 'Technology' },
@@ -110,20 +126,6 @@ export type EventSubCategory =
   (typeof EVENT_SUBCATEGORIES)[CommunityCategory][number]["value"]
 
 
-
-
-// marketing 
-import {
-  Users,
-  Calendar,
-  Ticket,
-  Shield,
-  UserPlus,
-  BadgeCheck,
-  Search,
-  LayoutDashboard,
-} from "lucide-react";
-
 export const GATHERLY_FEATURES = [
   {
     title: "Community Management",
@@ -227,3 +229,16 @@ export const SKELETON_COUNT = 9
 
 export const inputClass =
   'w-full px-4 py-2.5 bg-slate-800 border border-fog/20 rounded-lg text-mist placeholder-fog/40 text-sm focus:outline-none focus:border-lavender transition-colors'
+
+
+export const ROLE_CONFIG = {
+  OWNER:  { label: 'Owner',  icon: Crown,       className: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' },
+  ADMIN:  { label: 'Admin',  icon: ShieldCheck,  className: 'text-blue-400  bg-blue-400/10  border-blue-400/20'  },
+  MEMBER: { label: 'Member', icon: Users,        className: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
+} as const
+
+export const STATUS_CONFIG = {
+  PENDING:  { label: 'Pending',  icon: Clock,      className: 'text-amber-400  bg-amber-400/10  border-amber-400/20'  },
+  APPROVED: { label: 'Approved', icon: UserCheck,   className: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
+  REJECTED: { label: 'Rejected', icon: UserX,       className: 'text-red-400    bg-red-400/10    border-red-400/20'    },
+} as const

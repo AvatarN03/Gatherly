@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ImagePlus, MapPin, Tag, AlignLeft, Users, ArrowLeft, Loader2, X } from 'lucide-react'
+import { useUser } from '@clerk/react'
+import toast from 'react-hot-toast'
 
 import { Field } from '../../components/Field'
 
@@ -11,14 +13,12 @@ import { CommunityvalidateForm } from '../../lib/validation'
 
 import { COMMUNITY_CATEGORIES, inputClass } from '../../constant'
 
-import type { CreateCommunityDto } from '../../types'
-import { useUser } from '@clerk/react'
-import toast from 'react-hot-toast'
+import type { CreateCommunity } from '../../types'
 
-const CreateCommunity = () => {
+const CreateCommunityPage = () => {
   const navigate = useNavigate()
   const createMutation = useCreateCommunityMutation()
-  const [errors, setErrors] = useState<Partial<CreateCommunityDto>>({})
+  const [errors, setErrors] = useState<Partial<CreateCommunity>>({})
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -30,7 +30,7 @@ const CreateCommunity = () => {
     }
   }, [user, navigate]);
 
-  const [formData, setFormData] = useState<CreateCommunityDto>({
+  const [formData, setFormData] = useState<CreateCommunity>({
     name: '',
     description: '',
     location: '',
@@ -54,7 +54,7 @@ const CreateCommunity = () => {
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errors[name as keyof CreateCommunityDto]) {
+    if (errors[name as keyof CreateCommunity]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
   }
@@ -166,7 +166,7 @@ const CreateCommunity = () => {
                 </div>
               </Field>
 
-              <Field label="Category *" error={errors.category}>
+              <Field label="Category *" error={errors.category} classes={"cursor-pointer"}>
                 <div className="relative">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
                   <select
@@ -293,4 +293,4 @@ const CreateCommunity = () => {
   )
 }
 
-export default CreateCommunity
+export default CreateCommunityPage

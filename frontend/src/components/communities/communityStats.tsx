@@ -1,16 +1,14 @@
-import { Users, CalendarDays, ShieldCheck, ClipboardList } from "lucide-react";
+import { Users, CalendarDays, ClipboardList } from "lucide-react";
 
 type Props = {
   memberCount: number;
   eventCount: number;
-  adminCount: number;
   requestCount: number;
 };
 
 const STATS = (p: Props) => [
   { label: "Members",  value: p.memberCount,  icon: Users },
   { label: "Events",   value: p.eventCount,   icon: CalendarDays  },
-  { label: "Admins",   value: p.adminCount,   icon: ShieldCheck},
   { label: "Requests", value: p.requestCount, icon: ClipboardList },
 ];
 

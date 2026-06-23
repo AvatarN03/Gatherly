@@ -34,7 +34,7 @@ export const Footer = () => {
                             className="rounded-lg border border-white/10 flex items-center justify-center
                 text-fog/50 px-2 hover:text-lavender hover:bg-white/5 transition-colors cursor-pointer">
                             <img
-                                src="github.png"
+                                src="/github.png"
                                 alt="github"
                                 className="w-8 h-8"
                             />

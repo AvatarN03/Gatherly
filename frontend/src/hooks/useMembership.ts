@@ -1,9 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { api } from "../lib/axiosInstance";
-import type { Membership, MembershipRequest } from "../types/community";
+
+import type { MemberRoleHandler, Membership, MembershipRequest, RequestHandelStatus } from "../types";
 
 const membershipApi = {
-  joinCommunity: async (communityId: string): Promise<MembershipRequest> => {
+
+  createJoinRequest: async (communityId: string): Promise<MembershipRequest> => {
     const { data } = await api.post(`/memberships/${communityId}/join`);
     return data;
   },
@@ -13,12 +16,32 @@ const membershipApi = {
     return data;
   },
 
-  getMembers: async (communityId: string): Promise<Membership[]> => {
-    const { data } = await api.get(`/memberships/${communityId}/members`);
+  withdrawRequest: async (
+    communityId: string,
+  ): Promise<{ message: string }> => {
+    const { data } = await api.delete(`/memberships/${communityId}/withdraw`);
     return data;
   },
 
-  getCommunityRequests: async (communityId: string): Promise<MembershipRequest[]> => {
+  getMembers: async (communityId: string): Promise<Membership[]> => {
+    const { data } = await api.get(`/memberships/${communityId}/members`);
+    console.log("data from getMembers:", data);
+    return data;
+  },
+
+
+  getUserRequest: async (
+    communityId: string,
+  ): Promise<MembershipRequest | undefined> => {
+    const { data } = await api.get(`/memberships/${communityId}/my-request`);
+    console.log("data from getUserRequest:", data);
+    return data;
+  },
+
+  
+  getCommunityRequests: async (
+    communityId: string,
+  ): Promise<MembershipRequest[]> => {
     const { data } = await api.get(`/memberships/${communityId}/requests`);
     return data;
   },
@@ -26,21 +49,73 @@ const membershipApi = {
   handleRequest: async (
     communityId: string,
     requestId: string,
-    status: "APPROVED" | "REJECTED"
+    status: RequestHandelStatus,
   ): Promise<MembershipRequest> => {
-    const { data } = await api.patch(`/memberships/${communityId}/requests/${requestId}`, {
-      status,
-    });
+    const { data } = await api.patch(
+      `/memberships/${communityId}/requests/${requestId}`,
+      {
+        status,
+      },
+    );
     return data;
+  },
+ 
+  
+  updateMemberRole: async (
+    communityId: string,
+    memberId: string,
+    role: MemberRoleHandler
+  ): Promise<Membership> => {
+    const { data } = await api.patch(`/memberships/${communityId}/members/${memberId}`, { role })
+    return data
+  },
+  
+  removeMember: async (
+    communityId: string,
+    memberId: string
+  ): Promise<{ message: string }> => {
+    const { data } = await api.delete(`/memberships/${communityId}/members/${memberId}`)
+    return data
   },
 };
 
-// Join community mutation
+
+export const useUpdateMemberRoleMutation = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ communityId, memberId, role }: {
+      communityId: string
+      memberId: string
+      role: MemberRoleHandler
+    }) => membershipApi.updateMemberRole(communityId, memberId, role),
+    onSuccess: (_, { communityId }) => {
+      queryClient.invalidateQueries({ queryKey: ['memberships', communityId, 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] })
+    },
+  })
+}
+
+export const useRemoveMemberMutation = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ communityId, memberId }: {
+      communityId: string
+      memberId: string
+    }) => membershipApi.removeMember(communityId, memberId),
+    onSuccess: (_, { communityId }) => {
+      queryClient.invalidateQueries({ queryKey: ['memberships', communityId, 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] })
+    },
+  })
+}
+
+
 export const useJoinCommunityMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (communityId: string) => membershipApi.joinCommunity(communityId),
+    mutationFn: (communityId: string) =>
+      membershipApi.createJoinRequest(communityId),
     onSuccess: (_, communityId) => {
       queryClient.invalidateQueries({ queryKey: ["community", communityId] });
       queryClient.invalidateQueries({ queryKey: ["memberships", communityId] });
@@ -53,7 +128,20 @@ export const useLeaveCommunityMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (communityId: string) => membershipApi.leaveCommunity(communityId),
+    mutationFn: (communityId: string) =>
+      membershipApi.leaveCommunity(communityId),
+    onSuccess: (_, communityId) => {
+      queryClient.invalidateQueries({ queryKey: ["community", communityId] });
+      queryClient.invalidateQueries({ queryKey: ["memberships", communityId] });
+    },
+  });
+};
+
+export const useWithdrawRequestMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (communityId: string) =>
+      membershipApi.withdrawRequest(communityId),
     onSuccess: (_, communityId) => {
       queryClient.invalidateQueries({ queryKey: ["community", communityId] });
       queryClient.invalidateQueries({ queryKey: ["memberships", communityId] });
@@ -71,7 +159,10 @@ export const useMembersQuery = (communityId: string) => {
 };
 
 // Get community requests query
-export const useCommunityRequestsQuery = (communityId: string, enabled: boolean = true) => {
+export const useCommunityRequestsQuery = (
+  communityId: string,
+  enabled: boolean = true,
+) => {
   return useQuery({
     queryKey: ["memberships", communityId, "requests"],
     queryFn: () => membershipApi.getCommunityRequests(communityId),
@@ -79,7 +170,14 @@ export const useCommunityRequestsQuery = (communityId: string, enabled: boolean 
   });
 };
 
-// Handle membership request mutation
+export const useUserRequestQuery = (communityId: string) => {
+  return useQuery({
+    queryKey: ['memberships', communityId, 'my-request'],
+    queryFn: () => membershipApi.getUserRequest(communityId),
+    enabled: !!communityId,
+  })
+}
+
 export const useHandleRequestMutation = () => {
   const queryClient = useQueryClient();
 
@@ -94,8 +192,12 @@ export const useHandleRequestMutation = () => {
       status: "APPROVED" | "REJECTED";
     }) => membershipApi.handleRequest(communityId, requestId, status),
     onSuccess: (_, { communityId }) => {
-      queryClient.invalidateQueries({ queryKey: ["memberships", communityId, "requests"] });
-      queryClient.invalidateQueries({ queryKey: ["memberships", communityId, "members"] });
+      queryClient.invalidateQueries({
+        queryKey: ["memberships", communityId, "requests"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["memberships", communityId, "members"],
+      });
       queryClient.invalidateQueries({ queryKey: ["community", communityId] });
     },
   });

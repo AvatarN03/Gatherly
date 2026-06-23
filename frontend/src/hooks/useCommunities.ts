@@ -1,15 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+
 import { api } from "../lib/axiosInstance";
 import type { Community } from "../types";
 
-const communitiesApi = {
-  getAllCommunities: async (search?: string): Promise<Community[]> => {
-    const { data } = await api.get("/communities", {
-      params: {
-        search,
-      },
-    });
 
+const communitiesApi = {
+  
+  getAllCommunities: async (
+    search?: string,
+    page = 1,
+    limit = 9,
+  ): Promise<{
+    communities: Community[];
+    hasMore: boolean;
+    nextPage: number | null;
+  }> => {
+    const { data } = await api.get("/communities", {
+      params: { search, page, limit },
+    });
     return data;
   },
 
@@ -22,6 +30,8 @@ const communitiesApi = {
     const { data } = await api.get(`/communities/${id}`);
     return data;
   },
+
+
   createCommunity: async (formData: FormData): Promise<Community> => {
     const { data } = await api.post("/communities", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -33,7 +43,7 @@ const communitiesApi = {
     id: string,
     updates: FormData,
   ): Promise<Community> => {
-    const { data } = await api.patch(`/communities/${id}`, updates, {
+    const { data } = await api.put(`/communities/${id}`, updates, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
@@ -43,21 +53,25 @@ const communitiesApi = {
     await api.delete(`/communities/${id}`);
   },
 
-  verifyCommunity: async (id: string): Promise<{ message: string }> => {
-    const { data } = await api.get(`/communities/${id}/verify`);
-    return data;
-  },
+  // verifyCommunity: async (id: string): Promise<{ message: string }> => {
+  //   const { data } = await api.get(`/communities/${id}/verify`);
+  //   return data;
+  // },
 };
 
-// Hook to fetch all communities
-export const useCommunitiesQuery = (search: string) => {
-  return useQuery({
-    queryKey: ["communities", search],
-    queryFn: () => communitiesApi.getAllCommunities(search),
+// fetch all communities with optional search query
+export const useCommunitiesInfiniteQuery = (search: string) => {
+  return useInfiniteQuery({
+    queryKey: ["communities", "infinite", search],
+    queryFn: ({ pageParam = 1 }) =>
+      communitiesApi.getAllCommunities(search, pageParam, 9),
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextPage : undefined,
+    initialPageParam: 1,
   });
 };
 
-// Hook to fetch a single community
+// fetch a single community
 export const useCommunityQuery = (id: string) => {
   return useQuery({
     queryKey: ["community", id],
@@ -73,7 +87,7 @@ export const useMyCommunityQuery = () => {
   });
 };
 
-// Hook to create a community
+// create a community
 export const useCreateCommunityMutation = () => {
   const queryClient = useQueryClient();
 
@@ -86,8 +100,7 @@ export const useCreateCommunityMutation = () => {
   });
 };
 
-// Hook to update a community
-
+// update a community
 export const useUpdateCommunityMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -100,7 +113,7 @@ export const useUpdateCommunityMutation = () => {
   });
 };
 
-// Hook to delete a community
+// delete a community
 export const useDeleteCommunityMutation = () => {
   const queryClient = useQueryClient();
 

@@ -73,7 +73,6 @@ export const getMyCommunities = async (req: Request, res: Response) => {
   if (!user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  
 
   const communities = await prisma.community.findMany({
     where: {
@@ -105,19 +104,20 @@ export const getCommunityById = async (
             imageUrl: true,
           },
         },
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                imageUrl: true,
-              },
-            },
+        _count: {
+          select: {
+            members: true,
+            requests: true,
           },
         },
         events: true,
+        members:{
+          select:{
+            id:true,
+            userId:true,
+            role:true,
+          }
+        }
       },
     });
 
@@ -209,7 +209,10 @@ export const deleteCommunity = async (
     if (community.imageFileId) {
       try {
         await imagekit.files.delete(community.imageFileId);
-        console.log("Community image deleted from ImageKit:", community.imageFileId);
+        console.log(
+          "Community image deleted from ImageKit:",
+          community.imageFileId,
+        );
       } catch (error) {
         console.log("Image deletion failed:", error);
       }

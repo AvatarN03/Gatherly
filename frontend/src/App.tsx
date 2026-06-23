@@ -3,9 +3,9 @@ import { Toaster } from 'react-hot-toast';
 
 import Communities from "./pages/communities"
 import CommunityId from "./pages/communities/community-id"
-import CreateCommunity from "./pages/communities/create-community"
+import CreateCommunityPage from "./pages/communities/create-community"
 import EditCommunity from "./pages/communities/edit-community"
-import JoinCommunityPage from "./components/communities/JoinCommunity"
+
 
 import Events from "./pages/events"
 import EventId from "./pages/events/event-id"
@@ -20,6 +20,11 @@ import { Navbar } from "./components/Navbar"
 import Marketing from "./pages/marketing"
 import Wrapper from "./components/Wrapper"
 import { Footer } from "./components/Footer"
+import { CommunityMembersPanel } from "./pages/communities/community-id-members";
+import { CommunityRequestPanel } from "./pages/communities/community-id-requests";
+import CommunityWrapper from "./components/communities/CommunityWrapper";
+import { About } from "./pages/marketing/About";
+import { ContactUs } from "./pages/marketing/contactUs";
 
 
 const App = () => {
@@ -29,16 +34,25 @@ const App = () => {
       <Wrapper>
         <Routes>
           <Route path="/" element={<Marketing />} />
+          //TODO:about and contact us pages are not implemented yet
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<ContactUs />} />
 
           <Route path="/communities" element={<Communities />} />
-          <Route path="/communities/create" element={<CreateCommunity />} />
-          <Route path="/communities/:id/edit" element={<EditCommunity />} />
-          <Route path="/communities/:id" element={<CommunityId />} />
-          <Route path="/communities/:id/join" element={<JoinCommunityPage />} />
+
+          <Route path="/communities/create" element={<CreateCommunityPage />} />
+
+          <Route path="/communities/:id" element={<CommunityWrapper />}>
+            <Route index element={<CommunityId />} />
+            <Route path="edit" element={<EditCommunity />} />
+            <Route path="members" element={<CommunityMembersPanel />} />
+            <Route path="requests" element={<CommunityRequestPanel />} />
+          </Route>
 
           <Route path="/dashboard" element={<DashBoard />} />
 
           <Route path="/events" element={<Events />} />
+          
           <Route path="/events/:id" element={<EventId />} />
           <Route path="/events/create" element={<CreateEvent />} />
           <Route path="/events/:id/edit" element={<EditEvent />} />
@@ -47,7 +61,7 @@ const App = () => {
         </Routes>
       </Wrapper>
       <Footer />
-      <Toaster position="bottom-right"/>
+      <Toaster position="bottom-right" />
     </BrowserRouter>
   )
 }
