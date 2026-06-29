@@ -37,10 +37,10 @@ const CommunityWrapper = () => {
         <div className="p-4 bg-red-500/10 rounded-full">
           <AlertTriangle className="w-8 h-8 text-red-400" />
         </div>
-        <p className="text-[#DDDFFC] font-medium">Community not found</p>
+        <p className="text-mist font-medium">Community not found</p>
         <button
           onClick={() => navigate('/communities')}
-          className="text-sm text-[#A855F7] hover:underline"
+          className="text-sm text-orchid hover:underline"
         >
           Back to communities
         </button>

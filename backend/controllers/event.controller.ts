@@ -3,10 +3,7 @@ import { prisma } from "../utils/prisma.ts";
 import { CustomRequest } from "../types/index.ts";
 import imagekit from "../utils/imagekit.ts";
 
-export const createEvent = async (
-  req: CustomRequest,
-  res: Response
-) => {
+export const createEvent = async (req: CustomRequest, res: Response) => {
   try {
     const {
       title,
@@ -18,9 +15,7 @@ export const createEvent = async (
       communityId,
     } = req.body;
 
-    const members = req.body.members
-      ? JSON.parse(req.body.members)
-      : [];
+    const members = req.body.members ? JSON.parse(req.body.members) : [];
 
     const user = req.user;
 
@@ -42,52 +37,45 @@ export const createEvent = async (
       });
     }
 
-    const result = await prisma.$transaction(
-      async (tx) => {
-        const event = await tx.event.create({
-          data: {
-            title,
-            description,
-            date: new Date(date),
-            location,
-            category,
-            subCategory,
-            imageUrl: req.imageUrl || "",
-            imageFileId: req.imageFileId,
-            communityId,
-            createdById: user.id,
-          },
-        });
+    const result = await prisma.$transaction(async (tx) => {
+      const event = await tx.event.create({
+        data: {
+          title,
+          description,
+          date: new Date(date),
+          location,
+          category,
+          subCategory,
+          imageUrl: req.imageUrl || "",
+          imageFileId: req.imageFileId,
+          communityId,
+          createdById: user.id,
+        },
+      });
 
-        // Creator becomes HOST
-        await tx.eventMember.create({
-          data: {
+      // Creator becomes HOST
+      await tx.eventMember.create({
+        data: {
+          eventId: event.id,
+          userId: user.id,
+          role: "HOST",
+        },
+      });
+
+      // Selected members
+      if (members.length > 0) {
+        await tx.eventMember.createMany({
+          data: members.map((member: { userId: string; role: string }) => ({
             eventId: event.id,
-            userId: user.id,
-            role: "HOST",
-          },
+            userId: member.userId,
+            role: member.role,
+          })),
+          skipDuplicates: true,
         });
-
-        // Selected members
-        if (members.length > 0) {
-          await tx.eventMember.createMany({
-            data: members.map(
-              (member: {
-                userId: string;
-                role: string;
-              }) => ({
-                eventId: event.id,
-                userId: member.userId,
-                role: member.role,
-              })
-            ),
-            skipDuplicates: true,
-          });
-        }
-
-        return event;
       }
-    );
+
+      return event;
+    });
 
     res.status(201).json(result);
   } catch (error) {
@@ -101,7 +89,10 @@ export const createEvent = async (
 
 export const getEvents = async (req: Request, res: Response) => {
   try {
-    const { communityId, search } = req.query;
+    const { communityId, search, page = "1", limit = "9" } = req.query;
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
 
     const where: any = {};
 
@@ -117,23 +108,28 @@ export const getEvents = async (req: Request, res: Response) => {
       ];
     }
 
-    const events = await prisma.event.findMany({
-      where,
-      orderBy: {
-        date: "asc", // event data not created data
-      },
-      include: {
-        community: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
+    const [events, total] = await Promise.all([
+      prisma.event.findMany({
+        where,
+        orderBy: { date: "desc" },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+        include: {
+          community: {
+            select: { id: true, name: true, imageUrl: true },
           },
         },
-      },
-    });
+      }),
+      prisma.event.count({ where }),
+    ]);
 
-    res.json(events);
+    const hasMore = pageNum * limitNum < total;
+
+    res.json({
+      events,
+      nextPage: hasMore ? pageNum + 1 : null,
+      total,
+    });
   } catch (error) {
     console.error("Error fetching events:", error);
     res.status(500).json({ error: "Failed to fetch events" });
@@ -167,28 +163,14 @@ export const getEventById = async (
           },
         },
         members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                imageUrl: true,
-              },
-            },
+          select: {
+            id: true,
+            user: true,
+            role: true,
           },
         },
-        registrations: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                imageUrl: true,
-              },
-            },
-          },
+        _count: {
+          select: { registrations: true },
         },
       },
     });
@@ -250,9 +232,7 @@ export const updateEvent = async (
       data: {
         title,
         description,
-        date: date
-          ? new Date(date)
-          : event.date,
+        date: date ? new Date(date) : event.date,
         location,
         category,
         subCategory,
@@ -265,9 +245,7 @@ export const updateEvent = async (
 
     if (members) {
       const parsedMembers =
-        typeof members === "string"
-          ? JSON.parse(members)
-          : members;
+        typeof members === "string" ? JSON.parse(members) : members;
 
       await prisma.eventMember.deleteMany({
         where: {
@@ -286,9 +264,7 @@ export const updateEvent = async (
       if (parsedMembers.length > 0) {
         await prisma.eventMember.createMany({
           data: parsedMembers
-            .filter(
-              (m: any) => m.userId !== user.id
-            )
+            .filter((m: any) => m.userId !== user.id)
             .map((m: any) => ({
               eventId: id,
               userId: m.userId,
@@ -301,10 +277,7 @@ export const updateEvent = async (
 
     res.json(updatedEvent);
   } catch (error) {
-    console.error(
-      "Error updating event:",
-      error
-    );
+    console.error("Error updating event:", error);
 
     res.status(500).json({
       error: "Failed to update event",
@@ -410,6 +383,7 @@ export const registerForEvent = async (
   }
 };
 
+//TODO: handle edge case of owner unregister still there is no chance of having owner register
 export const unregisterFromEvent = async (
   req: Request<{ id: string }>,
   res: Response,
@@ -509,6 +483,64 @@ export const addEventMember = async (
   }
 };
 
+export const updateEventMember = async (
+  req: Request<{ id: string; memberId: string }>,
+  res: Response,
+) => {
+  try {
+    const { id, memberId } = req.params;
+    const { role } = req.body;
+    const user = req?.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!role) {
+      return res.status(400).json({ error: "Role is required" });
+    }
+
+    const event = await prisma.event.findUnique({ where: { id } });
+
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (event.createdById !== user.id) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to update members of this event" });
+    }
+
+    const member = await prisma.eventMember.findUnique({
+      where: { id: memberId },
+    });
+
+    if (!member || member.eventId !== id) {
+      return res.status(404).json({ error: "Member not found" });
+    }
+
+    if (member.userId === event.createdById) {
+      return res
+        .status(400)
+        .json({ error: "Cannot change the creator's role" });
+    }
+
+    const updated = await prisma.eventMember.update({
+      where: { id: memberId },
+      data: { role },
+      include: {
+        user: { select: { id: true, name: true, email: true, imageUrl: true } },
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Error updating event member:", error);
+    res.status(500).json({ error: "Failed to update event member" });
+  }
+};
+
 // ==================
 // Remove Event Member
 // ==================
@@ -598,14 +630,29 @@ export const getEventRegistrations = async (
 
     const event = await prisma.event.findUnique({
       where: { id },
+      include: {
+        members: {
+          where: {
+            userId: user.id,
+          },
+          select: {
+            role: true,
+          },
+        },
+      },
     });
 
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    // Authorization check - only creator can view registrations
-    if (event.createdById !== user.id) {
+    const isCreator = event.createdById === user.id;
+
+    const isCoordinator = event.members.some(
+      (member) => member.role === "COORDINATOR",
+    );
+
+    if (!isCreator && !isCoordinator) {
       return res
         .status(403)
         .json({ error: "Not authorized to view registrations" });

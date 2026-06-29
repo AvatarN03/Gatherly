@@ -41,7 +41,7 @@ const RoleDropdown = ({
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={isPending}
-        className="inline-flex items-center gap-1.5 text-xs font-medium border px-2.5 py-1 rounded-full transition-colors cursor-pointer disabled:opacity-50 text-fog/80 bg-stone/10 border-stone/40 hover:border-lavender/50 hover:text-lavender cursor-pointer disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-1.5 text-xs font-medium border px-2.5 py-1 rounded-full transition-colors cursor-pointer disabled:opacity-50 text-fog/80 bg-stone/10 border-stone/40 hover:border-lavender/50 hover:text-lavender  disabled:cursor-not-allowed"
       >
         {isPending
           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -50,7 +50,7 @@ const RoleDropdown = ({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-7 z-50 bg-[#0e2030] border border-stone/40 rounded-xl shadow-2xl overflow-hidden min-w-[130px]">
+        <div className="absolute right-0 top-7 z-50 bg-[#0e2030] border border-stone/40 rounded-xl shadow-2xl overflow-hidden min-w-32.5">
           {(['ADMIN', 'MEMBER'] as const).map((role) => {
             const { label, icon: Icon, className } = ROLE_CONFIG[role]
             return (

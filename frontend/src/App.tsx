@@ -11,8 +11,8 @@ import Events from "./pages/events"
 import EventId from "./pages/events/event-id"
 import CreateEvent from "./pages/events/create-event"
 import EditEvent from "./pages/events/editEvent"
+import GetEventRegisters from "./pages/events/getEventRegisters"
 
-import GetEventRegisters from "./pages/registers/getEventRegisters"
 
 import DashBoard from "./pages/dashboard"
 
@@ -25,6 +25,8 @@ import { CommunityRequestPanel } from "./pages/communities/community-id-requests
 import CommunityWrapper from "./components/communities/CommunityWrapper";
 import { About } from "./pages/marketing/About";
 import { ContactUs } from "./pages/marketing/contactUs";
+import EventWrapper from "./components/events/EventWrapper";
+import { EventTeam } from "./pages/events/EventTeam";
 
 
 const App = () => {
@@ -52,11 +54,14 @@ const App = () => {
           <Route path="/dashboard" element={<DashBoard />} />
 
           <Route path="/events" element={<Events />} />
-          
-          <Route path="/events/:id" element={<EventId />} />
           <Route path="/events/create" element={<CreateEvent />} />
-          <Route path="/events/:id/edit" element={<EditEvent />} />
-          <Route path="/register/:id" element={<GetEventRegisters />} />
+
+          <Route path="/events/:id" element={<EventWrapper />}>
+            <Route index element={<EventId />} />
+            <Route path="edit" element={<EditEvent />} />
+            <Route path="team" element={<EventTeam />} />
+            <Route path="registers" element={<GetEventRegisters />} />
+          </Route>
 
         </Routes>
       </Wrapper>

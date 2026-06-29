@@ -56,12 +56,10 @@ export interface MembershipRequest {
 }
 
 
-export type EventItem = {
-  id?: string
+export type CreateEvent = {
   title: string
   date: string
   time: string
-  createdBy: string
   location: string
   description: string
   communityId: string
@@ -69,9 +67,31 @@ export type EventItem = {
   imageFileId?: string
   category: CommunityCategory | "General"
   subCategory: EventSubCategory | ""
-  members: Membership[]
+  members: EventMember[]
 }
-
+export type EventItem = {
+  id: string
+  title: string
+  date: string
+  time: string
+  location: string
+  description: string
+  communityId: string
+  imageUrl?: string
+  imageFileId?: string
+  category: CommunityCategory | 'General'
+  subCategory: EventSubCategory | ''
+  createdById: string
+  createdAt: string
+  updatedAt: string
+  createdBy?: User
+  community?: Community
+  members?: EventMember[]
+  registrations?: EventRegistration[]
+  _count: {
+    registrations: number
+  }
+}
 
 
 
@@ -96,6 +116,15 @@ export interface CommunityGridType {
   sentinelRef: RefObject<HTMLDivElement | null>
 }
 
+export interface EventGridType {
+  events: EventItem[]
+  isLoading: boolean
+  isFetchingNextPage: boolean
+  hasNextPage: boolean
+  search: string
+  sentinelRef: RefObject<HTMLDivElement | null>
+}
+
 
 export interface HeaderProps {
     title: string
@@ -111,3 +140,44 @@ export type StatusFilter = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL';
 export type RequestHandelStatus = 'APPROVED' | 'REJECTED';
 
 export type MemberRoleHandler = 'ADMIN' | 'MEMBER';
+
+
+
+
+
+
+
+
+
+
+
+
+// Add these to your existing types.ts
+
+export const EVENT_MEMBER_ROLES = ['HOST', 'SPEAKER', 'COORDINATOR', 'VOLUNTEER'] as const
+
+export type EventMemberRole = typeof EVENT_MEMBER_ROLES[number]
+
+export interface EventMember {
+  id: string
+  eventId: string
+  userId: string
+  role: EventMemberRole
+  assignedAt: string
+  user: User,
+}
+
+// Replace the existing EventItem with this — members is EventMember[], not Membership[]
+
+
+export interface EventRegistration {
+  id: string
+  eventId: string
+  userId: string
+  status: RegistrationStatus
+  registeredAt: string
+  user?: User
+}
+
+export type RegistrationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+

@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useUser } from '@clerk/react'
 import {
   ArrowLeft,
   Loader2,
@@ -18,95 +17,101 @@ import toast from 'react-hot-toast'
 
 import { Field } from '../../components/Field'
 
-import { useCreateEventMutation } from '../../hooks/useEvents'
-import { useMyCommunityQuery } from '../../hooks/useCommunities'
+import { useEventContext } from '../../context/eventContext'
+
+import { useUpdateEventMutation } from '../../hooks/useEvents'
+import { useMembersQuery } from '../../hooks/useMembership'
 
 import { EventValidateForm } from '../../lib/validation'
 
-import { EVENT_MEMBER_ROLES, type CreateEvent } from '../../types'
+import { EVENT_MEMBER_ROLES, type EventItem, type EventMemberRole } from '../../types'
 import { EVENT_SUBCATEGORIES, inputClass } from '../../constant'
 import type { CommunityCategory } from '../../constant'
-import { useMembersQuery } from '../../hooks/useMembership'
 
-const CreateEventPage = () => {
+const EditEventPage = () => {
   const navigate = useNavigate()
-  const { data: communities = [] } = useMyCommunityQuery()
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [selectedMembers, setSelectedMembers] = useState<Array<{ userId: string; role: string }>>([])
-  const [errors, setErrors] = useState<Partial<CreateEvent>>({})
+  const { event, isCreator } = useEventContext();
 
-  const { mutateAsync: createEvent, isPending, isError } = useCreateEventMutation();
 
-  const { user, isLoaded } = useUser();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Partial<EventItem>>({})
 
-  useEffect(() => {
-    if (!user && isLoaded) {
-      toast.error('You must be logged in to create an event')
-      navigate('/events')
-    }
-  }, [user, isLoaded, navigate])
+  const existingImageUrl = event.imageUrl ?? null;
 
-  const [formData, setFormData] = useState<Partial<CreateEvent>>({
-    title: '',
-    date: '',
-    time: '',
-    location: '',
-    description: '',
-    communityId: '',
-    category: 'General',
-    subCategory: '',
+  const { mutateAsync: updateEvent, isPending, isError } = useUpdateEventMutation()
+
+  // Community is fixed for edit — just need the roster to assign roles from
+  const { data: members = [], isLoading: membersLoading } = useMembersQuery(event.communityId)
+
+  const [formData, setFormData] = useState<Partial<EventItem>>({
+    title: event.title ?? '',
+    date: event.date ? event.date.split('T')[0] : '',
+    time: event.time ?? '',
+    location: event.location ?? '',
+    description: event.description ?? '',
+    communityId: event.communityId,
+    category: event.category ?? '',
+    subCategory: event.subCategory ?? '',
   })
 
-  // Fetch members for the selected community
-  const { data: members = [], isLoading: membersLoading } = useMembersQuery(formData.communityId ?? '')
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+
+  const [selectedMembers, setSelectedMembers] = useState(
+    (event.members ?? [])
+      .filter((m) => m.userId !== event.createdById)
+      .map((m) => ({ userId: m.userId, role: m.role })),
+  )
+
+  if (!isCreator) {
+    return (
+      <div className="min-h-screen bg-night flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="text-mist font-medium">You don't have permission to edit this event.</p>
+          <button
+            onClick={() => navigate(`/events/${event.id}`)}
+            className="text-sm text-orchid hover:underline"
+          >
+            Back to event
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  const clearImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-  }
-
-  const selectedCommunity = communities.find((c) => c.id === formData.communityId)
-
-  const subcategories =
-    selectedCommunity && 'category' in selectedCommunity
-      ? EVENT_SUBCATEGORIES[selectedCommunity.category as CommunityCategory] ?? []
-      : []
+  const subcategories = formData.category
+    ? EVENT_SUBCATEGORIES[formData.category as CommunityCategory] ?? []
+    : []
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
-    if (errors[name as keyof CreateEvent]) {
+    if (errors[name as keyof EventItem]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
-    setFormData((prev) => {
-      if (name === 'communityId') {
-        const community = communities.find((c) => c.id === value)
-        setSelectedMembers([]) // reset team when community changes
-        return {
-          ...prev,
-          communityId: value,
-          category: (community?.category as CommunityCategory) ?? '',
-          subCategory: '',
-        }
-      }
-      return { ...prev, [name]: value }
-    })
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({}); // Reset errors before validation
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
 
-    if (!EventValidateForm(formData, setErrors)) return;
+  // Reverts to the event's current cover image rather than blanking it —
+  // there's already a real image saved, so "clear" here means "never mind,
+  // keep what was there" rather than "remove the cover image".
+  const clearStagedImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+  }
+
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    if (!EventValidateForm(formData, setErrors)) return
 
     const payload = new FormData()
     payload.append('title', formData.title || '')
@@ -114,52 +119,51 @@ const CreateEventPage = () => {
     payload.append('time', formData.time || '')
     payload.append('location', formData.location || '')
     payload.append('description', formData.description || '')
-    payload.append('communityId', formData.communityId || '')
     payload.append('category', formData.category || '')
     payload.append('subCategory', formData.subCategory || '')
     payload.append('members', JSON.stringify(selectedMembers))
 
-    if (imageFile) payload.append('eventImage', imageFile)
+    if (imageFile) {
+      payload.append("updateEventImage", imageFile);
+    }
 
     try {
-      await toast.promise(createEvent(payload), {
-        loading: 'Creating event...',
-        success: 'Event created successfully!',
-        error: 'Failed to create event',
+      await toast.promise(updateEvent({ id: event.id, updates: payload }), {
+        loading: 'Saving changes...',
+        success: 'Event updated successfully!',
+        error: 'Failed to update event',
       })
-      setFormData({});
-      setImageFile(null);
-      setImagePreview(null);
-      setSelectedMembers([]);
-      setErrors({});
-      navigate('/events')
+      navigate(`/events/${event.id}`)
     } catch (error) {
-      toast.error('Failed to create event. Please try again.')
       console.error(error)
     }
   }
+
+  const displayedImage = imagePreview ?? existingImageUrl;
 
   return (
     <div className="bg-night/50 py-10 px-4">
       <div className="max-w-5xl mx-auto">
 
         {/* Back + heading */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/events')}
-            className="flex items-center text-fog/50 hover:text-mist text-sm transition-colors mb-4 hover:underline underline-offset-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Events
-          </button>
-          <h1 className="text-2xl font-medium text-mist">Create an Event</h1>
-          <p className="text-fog/50 text-sm mt-1">Fill in the details to set up your event</p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <button
+              onClick={() => navigate(`/events/${event.id}`)}
+              className="flex items-center text-fog/50 hover:text-mist text-sm transition-colors mb-4 hover:underline underline-offset-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Event
+            </button>
+            <h1 className="text-2xl font-medium text-mist">Edit Event</h1>
+            <p className="text-fog/50 text-sm mt-1">Update the details for this event</p>
+          </div>
         </div>
 
         {isError && (
           <div className="mb-6 flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
             <X className="w-4 h-4 shrink-0" />
-            Failed to create event. Please try again.
+            Failed to update event. Please try again.
           </div>
         )}
 
@@ -169,41 +173,31 @@ const CreateEventPage = () => {
             {/* LEFT column */}
             <div className="flex flex-col gap-6">
 
-              <Field label="Community *" error={errors.communityId}>
+              {/* Community — locked, cannot change on edit */}
+              <Field label="Community (cannot be changed)">
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-                  <select
-                    name="communityId"
-                    value={formData.communityId}
-                    onChange={handleChange}
-                    disabled={isPending}
-                    className={`${inputClass} pl-10 appearance-none`}
-                  >
-                    <option value="">Select a community</option>
-                    {communities.map((c) => (
-                      <option key={c.id} value={c.id} className="bg-forest-teal">
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    value={event.community?.name ?? ''}
+                    disabled
+                    className={`${inputClass} pl-10 opacity-50 cursor-not-allowed`}
+                  />
                 </div>
               </Field>
 
-              {/* Category — auto-filled, read-only */}
-              {formData.category && (
-                <Field label="Community Category">
-                  <div className="relative">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-                    <input
-                      value={formData.category}
-                      disabled
-                      className={`${inputClass} pl-10 opacity-50 cursor-not-allowed`}
-                    />
-                  </div>
-                </Field>
-              )}
+              {/* Category — locked, inherited from the community at creation */}
+              <Field label="Community Category">
+                <div className="relative">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                  <input
+                    value={formData.category}
+                    disabled
+                    className={`${inputClass} pl-10 opacity-50 cursor-not-allowed`}
+                  />
+                </div>
+              </Field>
 
-              {/* Sub-category */}
+              {/* Sub-category — still editable */}
               {subcategories.length > 0 && (
                 <Field label="Sub-Category *">
                   <div className="relative">
@@ -308,20 +302,24 @@ const CreateEventPage = () => {
 
               {/* Image upload */}
               <Field label="Event Image">
-                {imagePreview ? (
+                {displayedImage ? (
                   <div className="relative rounded-xl overflow-hidden border border-orchid">
-                    <img src={imagePreview} alt="Preview" className="w-full h-64 object-cover" />
+                    <img src={displayedImage} alt="Preview" className="w-full h-64 object-cover" />
                     <button
                       type="button"
-                      onClick={clearImage}
-                      disabled={isPending}
-                      className="absolute top-3 right-3 p-1.5 bg-slate-900/80 hover:bg-slate-900 rounded-full text-mist cursor-pointer transition-colors"
+                      onClick={clearStagedImage}
+                      disabled={isPending || !imagePreview}
+                      className="absolute top-3 right-3 p-1.5 bg-slate-900/80 hover:bg-slate-900 rounded-full text-mist cursor-pointer transition-colors disabled:opacity-0"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
                     <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-900/60 text-fog/80 text-xs truncate">
-                      {imageFile?.name}
+                      {imageFile ? imageFile.name : 'Current cover image'}
                     </div>
+                    <label className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-900/0 hover:bg-slate-900/20 cursor-pointer transition-colors opacity-0 hover:opacity-100 flex items-center justify-center">
+                      <span className="text-mist text-xs font-medium">Click to replace</span>
+                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    </label>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate hover:border-orchid/50 rounded-xl cursor-pointer transition-colors group">
@@ -333,24 +331,25 @@ const CreateEventPage = () => {
                 )}
               </Field>
 
-              {/* Event Team — driven by useMembersQuery */}
-              {formData.communityId && (
-                <div className="bg-deep-ocean/75 border border-stone rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <UserCheck className="w-4 h-4 text-lavender" />
-                    <p className="text-fog text-xs uppercase tracking-widest">Assign Event Team</p>
-                  </div>
+              {/* Event Team */}
+              <div className="bg-deep-ocean/75 border border-stone rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck className="w-4 h-4 text-lavender" />
+                  <p className="text-fog text-xs uppercase tracking-widest">Assign Event Team</p>
+                </div>
 
-                  {membersLoading ? (
-                    <div className="flex items-center gap-2 py-4 justify-center text-fog/50 text-sm">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading members...
-                    </div>
-                  ) : members.length === 0 ? (
-                    <p className="text-fog/40 text-sm text-center py-4">No members in this community yet.</p>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      {members.map((member) => {
+                {membersLoading ? (
+                  <div className="flex items-center gap-2 py-4 justify-center text-fog/50 text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading members...
+                  </div>
+                ) : members.filter((m) => m.userId !== event.createdById).length === 0 ? (
+                  <p className="text-fog/40 text-sm text-center py-4">No other members in this community yet.</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {members
+                      .filter((m) => m.userId !== event.createdById)
+                      .map((member) => {
                         const selected = selectedMembers.find((m) => m.userId === member.userId)
                         return (
                           <div
@@ -395,7 +394,7 @@ const CreateEventPage = () => {
                                 onChange={(e) => {
                                   setSelectedMembers((prev) =>
                                     prev.map((m) =>
-                                      m.userId === member.userId ? { ...m, role: e.target.value } : m
+                                      m.userId === member.userId ? { ...m, role: e.target.value as EventMemberRole } : m
                                     )
                                   )
                                 }}
@@ -411,10 +410,9 @@ const CreateEventPage = () => {
                           </div>
                         )
                       })}
-                    </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
 
             </div>
           </div>
@@ -429,16 +427,16 @@ const CreateEventPage = () => {
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Creating...
+                  Saving...
                 </>
               ) : (
-                'Create Event'
+                'Save Changes'
               )}
             </button>
             <button
               type="button"
               disabled={isPending}
-              onClick={() => navigate('/events')}
+              onClick={() => navigate(`/events/${event.id}`)}
               className="flex-1 bg-forest-teal border border-lavender/50 text-mist py-2.5 px-6 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-forest-teal hover:bg-forest-teal/90 cursor-pointer"
             >
               Cancel
@@ -450,4 +448,4 @@ const CreateEventPage = () => {
   )
 }
 
-export default CreateEventPage
+export default EditEventPage

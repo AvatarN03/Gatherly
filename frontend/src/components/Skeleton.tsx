@@ -11,18 +11,24 @@ const Skeleton = () => (
 )
 
 export const CommunitySkeleton = () => (
-  <div className="min-h-screen bg-[#0C1926] px-4 py-8 animate-pulse">
+  <div className="min-h-screen bg-night px-4 py-8 animate-pulse">
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="h-4 w-32 bg-[#182F3D] rounded" />
-      <div className="h-64 w-full bg-[#182F3D] rounded-2xl" />
+      <div className="h-4 w-32 bg-slate rounded" />
+      <div className="h-64 w-full bg-slate rounded-2xl" />
       <div className="grid grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-20 bg-[#182F3D] rounded-xl" />
+          <div key={i} className="h-20 bg-slate rounded-xl" />
         ))}
       </div>
-      <div className="h-10 bg-[#182F3D] rounded-xl" />
-      <div className="h-48 bg-[#182F3D] rounded-xl" />
+      <div className="h-10 bg-slate rounded-xl" />
+      <div className="h-48 bg-slate rounded-xl" />
     </div>
+  </div>
+)
+
+export const EventSkeleton = () => (
+  <div className="bg-night/50 min-h-screen flex items-center justify-center">
+    <div className="w-5 h-5 rounded-full border-2 border-orchid border-t-transparent animate-spin" />
   </div>
 )
 
