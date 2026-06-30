@@ -9,7 +9,7 @@ import { useCommunityQuery, useDeleteCommunityMutation } from '../../hooks/useCo
 import { useUserRequestQuery } from '../../hooks/useMembership'
 
 import CommunityTopBar from './CommunityTopBar'
-import DeleteCommunityModal from './deleteCommunityModal'
+import DeleteCommunityModal from './DeleteCommunityModal'
 import { CommunitySkeleton } from '../Skeleton'
 
 const CommunityWrapper = () => {

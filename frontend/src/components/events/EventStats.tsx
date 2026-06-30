@@ -13,7 +13,7 @@ const STATS = (p: Props) => [
 ]
 
 const EventStats = (props: Props) => (
-  <div className="grid grid-cols-3 gap-3">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full md:w-fit">
     {STATS(props).map(({ label, value, icon: Icon, small }) => (
       <div
         key={label}

@@ -5,6 +5,9 @@ import Communities from "./pages/communities"
 import CommunityId from "./pages/communities/community-id"
 import CreateCommunityPage from "./pages/communities/create-community"
 import EditCommunity from "./pages/communities/edit-community"
+import { CommunityMembersPanel } from "./pages/communities/community-id-members";
+import { CommunityRequestPanel } from "./pages/communities/community-id-requests";
+import CommunityWrapper from "./components/communities/CommunityWrapper";
 
 
 import Events from "./pages/events"
@@ -12,21 +15,18 @@ import EventId from "./pages/events/event-id"
 import CreateEvent from "./pages/events/create-event"
 import EditEvent from "./pages/events/editEvent"
 import GetEventRegisters from "./pages/events/getEventRegisters"
+import { EventTeam } from "./pages/events/eventTeam";
+import EventWrapper from "./components/events/EventWrapper";
 
 
 import DashBoard from "./pages/dashboard"
 
-import { Navbar } from "./components/Navbar"
 import Marketing from "./pages/marketing"
-import Wrapper from "./components/Wrapper"
-import { Footer } from "./components/Footer"
-import { CommunityMembersPanel } from "./pages/communities/community-id-members";
-import { CommunityRequestPanel } from "./pages/communities/community-id-requests";
-import CommunityWrapper from "./components/communities/CommunityWrapper";
 import { About } from "./pages/marketing/About";
 import { ContactUs } from "./pages/marketing/contactUs";
-import EventWrapper from "./components/events/EventWrapper";
-import { EventTeam } from "./pages/events/EventTeam";
+import Wrapper from "./components/Wrapper"
+import { Navbar } from "./components/Navbar"
+import { Footer } from "./components/Footer"
 
 
 const App = () => {

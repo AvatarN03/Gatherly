@@ -2,10 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import {
   UserPlus,
   X,
-  Crown,
-  Mic,
-  ClipboardList,
-  HeartHandshake,
   ChevronDown,
   Check,
   Mail,
@@ -23,17 +19,11 @@ import {
   useRemoveEventMemberMutation,
   useUpdateEventMemberMutation,
 } from '../../hooks/useEvents'
+
 import { EVENT_MEMBER_ROLES, type EventMember, type EventMemberRole } from '../../types'
+import { Badge } from '../../components/Badge'
+import { EVENT_ROLE_BADGES } from '../../constant'
 
-const ROLE_ICONS: Record<EventMemberRole, typeof Crown> = {
-  HOST: Crown,
-  SPEAKER: Mic,
-  COORDINATOR: ClipboardList,
-  VOLUNTEER: HeartHandshake,
-}
-
-const formatRole = (role: string) =>
-  role.charAt(0) + role.slice(1).toLowerCase()
 
 const EventMemberProfileDialog = ({
   member,
@@ -43,7 +33,6 @@ const EventMemberProfileDialog = ({
   onClose: () => void
 }) => {
   const { event } = useEventContext()
-  const RoleIcon = ROLE_ICONS[member.role]
 
   return (
     <div
@@ -88,10 +77,10 @@ const EventMemberProfileDialog = ({
             <h3 className="text-lg font-semibold text-mist leading-tight">
               {member.user?.name ?? '—'}
             </h3>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium border px-2.5 py-1 rounded-full shrink-0 text-fog/80 bg-stone/10 border-stone/40">
-              <RoleIcon className="w-3.5 h-3.5" />
-              {formatRole(member.role)}
-            </span>
+            <Badge
+              config={EVENT_ROLE_BADGES[member.role]}
+              size="sm"
+            />
           </div>
 
           <div className="space-y-3">
@@ -143,17 +132,18 @@ const EventMemberProfileDialog = ({
 
 
 export const EventTeam = () => {
-  const { event, isCreator, isCommunityAdmin, isEventTeam } = useEventContext()
+  const { event, isCreator, isCommunityAdmin } = useEventContext()
   const [showAddPanel, setShowAddPanel] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState('')
   const [selectedRole, setSelectedRole] = useState<EventMemberRole>('COORDINATOR')
   const [isPickerOpen, setIsPickerOpen] = useState(false)
-  const pickerRef = useRef<HTMLDivElement>(null)
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  const canManageTeam = isCreator || isCommunityAdmin;
 
   const [profileMember, setProfileMember] = useState<EventMember | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<EventMember | null>(null)
 
-  const canManageTeam = isCreator || isCommunityAdmin || isEventTeam
 
   const teamMembers = event.members ?? []
   const teamUserIds = new Set(teamMembers.map((m) => m.userId))
@@ -220,11 +210,12 @@ export const EventTeam = () => {
   const selectedCandidate = candidates.find((c) => c.userId === selectedUserId)
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-sm tracking-widest uppercase text-fog">
           Event Team ({teamMembers.length})
         </h2>
+
 
         {canManageTeam && (
           <button
@@ -235,6 +226,7 @@ export const EventTeam = () => {
             Add member
           </button>
         )}
+
       </div>
 
       {/* Add panel */}
@@ -309,8 +301,8 @@ export const EventTeam = () => {
                   className="bg-night/40 border border-stone/50 rounded-lg px-3 py-2 text-sm text-white"
                 >
                   {EVENT_MEMBER_ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {formatRole(r)}
+                    <option key={r} value={r} className="bg-night text-white">
+                      {EVENT_ROLE_BADGES[r].label}
                     </option>
                   ))}
                 </select>
@@ -331,7 +323,6 @@ export const EventTeam = () => {
       {/* Current team list */}
       <div className="space-y-2">
         {teamMembers.map((member) => {
-          const RoleIcon = ROLE_ICONS[member.role]
           const isCreatorRow = event.createdById === member.userId
 
           const isUpdatingThisRow =
@@ -341,14 +332,14 @@ export const EventTeam = () => {
           return (
             <div
               key={member.id}
-              className="flex items-center justify-between gap-3 bg-night/30 border border-stone/30 rounded-xl px-4 py-3 transition-colors hover:border-stone/50"
+              className="flex items-center justify-between gap-3 bg-night/30 border border-stone/30 rounded-xl px-4 py-3 transition-colors hover:border-stone/50 cursor-pointer hover:bg-night/40"
+              onClick={() => setProfileMember(member)}
+              title="View profile"
             >
               {/* Avatar + info — clickable, opens profile dialog */}
-              <button
-                type="button"
-                onClick={() => setProfileMember(member)}
+              <div
                 className="flex items-center gap-3 min-w-0 text-left cursor-pointer group"
-                title="View profile"
+
               >
                 <img
                   src={member.user?.imageUrl || '/avatar_holder.jpg'}
@@ -361,33 +352,45 @@ export const EventTeam = () => {
                   </p>
                   <p className="text-xs text-fog truncate">{member.user?.email}</p>
                 </div>
-              </button>
+              </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 {canManageTeam && !isCreatorRow ? (
-                  <div className="relative">
+                  <div
+                    className="relative"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <select
                       value={member.role}
                       disabled={isUpdatingThisRow}
-                      onChange={(e) =>
-                        handleRoleChange(member.id, e.target.value as EventMemberRole)
-                      }
-                      className="appearance-none bg-stone/20 hover:bg-stone/30 text-fog text-xs tracking-wide rounded-full pl-7 pr-7 py-1.5 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-wait focus:outline-none focus:ring-1 focus:ring-lavender"
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleRoleChange(
+                          member.id,
+                          e.target.value as EventMemberRole
+                        );
+                      }}
+                      className="appearance-none bg-stone/20 hover:bg-stone/30 text-fog text-xs rounded-full px-3 pr-7 py-1.5 cursor-pointer"
                     >
                       {EVENT_MEMBER_ROLES.map((r) => (
-                        <option key={r} value={r} className="bg-night text-white">
-                          {formatRole(r)}
+                        <option
+                          key={r}
+                          value={r}
+                          className="bg-night text-white"
+                        >
+                          {EVENT_ROLE_BADGES[r].label}
                         </option>
                       ))}
                     </select>
-                    <RoleIcon className="w-3.5 h-3.5 text-fog absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <ChevronDown className="w-3 h-3 text-fog absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+
+                    <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 ) : (
-                  <span className="flex items-center gap-1.5 bg-stone/20 text-fog text-xs tracking-wide rounded-full px-3 py-1.5">
-                    <RoleIcon className="w-3.5 h-3.5" />
-                    {formatRole(member.role)}
-                  </span>
+                  <Badge
+                    config={EVENT_ROLE_BADGES[member.role]}
+                    size="sm"
+                  />
                 )}
 
                 {canManageTeam && !isCreatorRow && (

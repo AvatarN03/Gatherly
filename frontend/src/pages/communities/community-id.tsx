@@ -4,7 +4,7 @@ import { LayoutGrid, CalendarDays } from 'lucide-react'
 
 import CommunityHero from '../../components/communities/communityHero'
 import CommunityStats from '../../components/communities/communityStats'
-import OverviewTab from '../../components/communities/overViewTabs'
+import OverviewTab from '../../components/communities/OverViewTabs'
 import EventsTab from '../../components/communities/EventsTab'
 
 import {

@@ -10,31 +10,35 @@ import {
   AlignLeft,
   MapPin,
   Tag,
-  Calendar,
-  Clock,
   UserCheck,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { Field } from '../../components/Field'
+import { EventDatePicker } from '../../components/events/EventDatePicker'
+import { EventTimePicker } from '../../components/events/EventTimePicker'
 
 import { useCreateEventMutation } from '../../hooks/useEvents'
 import { useMyCommunityQuery } from '../../hooks/useCommunities'
+import { useMembersQuery } from '../../hooks/useMembership'
 
+import { truncate } from '../../lib'
 import { EventValidateForm } from '../../lib/validation'
 
 import { EVENT_MEMBER_ROLES, type CreateEvent } from '../../types'
+
 import { EVENT_SUBCATEGORIES, inputClass } from '../../constant'
 import type { CommunityCategory } from '../../constant'
-import { useMembersQuery } from '../../hooks/useMembership'
 
 const CreateEventPage = () => {
-  const navigate = useNavigate()
-  const { data: communities = [] } = useMyCommunityQuery()
+  const navigate = useNavigate();
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [selectedMembers, setSelectedMembers] = useState<Array<{ userId: string; role: string }>>([])
-  const [errors, setErrors] = useState<Partial<CreateEvent>>({})
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const [selectedMembers, setSelectedMembers] = useState<Array<{ userId: string; role: string }>>([]);
+  const [errors, setErrors] = useState<Partial<CreateEvent>>({});
+
+  const { data: communities = [], isLoading: communitiesLoading } = useMyCommunityQuery();
 
   const { mutateAsync: createEvent, isPending, isError } = useCreateEventMutation();
 
@@ -122,7 +126,7 @@ const CreateEventPage = () => {
     if (imageFile) payload.append('eventImage', imageFile)
 
     try {
-      await toast.promise(createEvent(payload), {
+      const result = await toast.promise(createEvent(payload), {
         loading: 'Creating event...',
         success: 'Event created successfully!',
         error: 'Failed to create event',
@@ -132,7 +136,7 @@ const CreateEventPage = () => {
       setImagePreview(null);
       setSelectedMembers([]);
       setErrors({});
-      navigate('/events')
+      navigate(`/events/${result.id}`); 
     } catch (error) {
       toast.error('Failed to create event. Please try again.')
       console.error(error)
@@ -172,17 +176,32 @@ const CreateEventPage = () => {
               <Field label="Community *" error={errors.communityId}>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+
+                  {communitiesLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-fog" />
+                  )}
+
                   <select
                     name="communityId"
                     value={formData.communityId}
                     onChange={handleChange}
-                    disabled={isPending}
-                    className={`${inputClass} pl-10 appearance-none`}
+                    disabled={isPending || communitiesLoading}
+                    className={`${inputClass} pl-10 appearance-none pr-10 cursor-pointer truncate w-full max-w-2xl`}
                   >
-                    <option value="">Select a community</option>
+                    <option value="" >
+                      {communitiesLoading
+                        ? "Loading communities..."
+                        : "Select a community"}
+                    </option>
+
                     {communities.map((c) => (
-                      <option key={c.id} value={c.id} className="bg-forest-teal">
-                        {c.name}
+                      <option
+                        key={c.id}
+                        value={c.id}
+                        title={c.name}
+                        className="bg-slate-900 text-mist"
+                      >
+                        {truncate(c.name)}
                       </option>
                     ))}
                   </select>
@@ -242,32 +261,19 @@ const CreateEventPage = () => {
               </Field>
 
               {/* Date + Time */}
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Date *" error={errors.date}>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                      disabled={isPending}
-                      className={`${inputClass} pl-10`}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Date">
+                  <EventDatePicker
+                    value={formData.date}
+                    onChange={(date) => setFormData((prev) => ({ ...prev, date }))}
+                  />
                 </Field>
-                <Field label="Time *" error={errors.time}>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-                    <input
-                      type="time"
-                      name="time"
-                      value={formData.time}
-                      onChange={handleChange}
-                      disabled={isPending}
-                      className={`${inputClass} pl-10`}
-                    />
-                  </div>
+
+                <Field label="Time">
+                  <EventTimePicker
+                    value={formData.time}
+                    onChange={(time) => setFormData((prev) => ({ ...prev, time }))}
+                  />
                 </Field>
               </div>
 
@@ -352,6 +358,7 @@ const CreateEventPage = () => {
                     <div className="flex flex-col gap-3">
                       {members.map((member) => {
                         const selected = selectedMembers.find((m) => m.userId === member.userId)
+                        
                         return (
                           <div
                             key={member.userId}

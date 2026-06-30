@@ -39,33 +39,40 @@ export const createCommunity = async (req: CustomRequest, res: Response) => {
 };
 
 export const getCommunities = async (req: Request, res: Response) => {
-  const search = (req.query.search as string) || "";
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 9;
-  const skip = (page - 1) * limit;
+  try {
+    const search = (req.query.search as string) || "";
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 9;
+    const skip = (page - 1) * limit;
 
-  const where = {
-    name: {
-      contains: search,
-      mode: "insensitive" as const,
-    },
-  };
+    const where = {
+      name: {
+        contains: search,
+        mode: "insensitive" as const,
+      },
+    };
 
-  const [communities, total] = await prisma.$transaction([
-    prisma.community.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    }),
-    prisma.community.count({ where }),
-  ]);
+    const [communities, total] = await Promise.all([
+      prisma.community.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.community.count({ where }),
+    ]);
 
-  res.json({
-    communities,
-    hasMore: skip + communities.length < total,
-    nextPage: page + 1,
-  });
+    res.json({
+      communities,
+      hasMore: skip + communities.length < total,
+      nextPage: page + 1,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to fetch communities",
+    });
+  }
 };
 
 export const getMyCommunities = async (req: Request, res: Response) => {

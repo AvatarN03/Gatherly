@@ -15,12 +15,34 @@ export const EventValidateForm = (
 ): boolean => {
   const newErrors: Partial<CreateEvent | EventItem> = {}
 
-  if (!formData.communityId?.trim()) newErrors.communityId = 'Please select a community'
-  if (!formData.title?.trim()) newErrors.title = 'Event title is required'
-  if (!formData.date?.trim()) newErrors.date = 'Date is required'
-  if (!formData.time?.trim()) newErrors.time = 'Time is required'
-  if (!formData.location?.trim()) newErrors.location = 'Location is required'
-  if (!formData.description?.trim()) newErrors.description = 'Description is required'
+  if (!formData.communityId?.trim())
+    newErrors.communityId = 'Please select a community'
+
+  if (!formData.title?.trim())
+    newErrors.title = 'Event title is required'
+
+  if (!formData.date?.trim()) {
+    newErrors.date = 'Date is required'
+  } else {
+    const selectedDate = new Date(formData.date)
+    selectedDate.setHours(0, 0, 0, 0)
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      newErrors.date = 'Event date cannot be in the past'
+    }
+  }
+
+  if (!formData.time?.trim())
+    newErrors.time = 'Time is required'
+
+  if (!formData.location?.trim())
+    newErrors.location = 'Location is required'
+
+  if (!formData.description?.trim())
+    newErrors.description = 'Description is required'
 
   setErrors(newErrors)
   return Object.keys(newErrors).length === 0

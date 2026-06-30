@@ -9,6 +9,7 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
       title,
       description,
       date,
+      time,
       location,
       category,
       subCategory,
@@ -43,6 +44,7 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
           title,
           description,
           date: new Date(date),
+          time,
           location,
           category,
           subCategory,
@@ -197,6 +199,7 @@ export const updateEvent = async (
       title,
       description,
       date,
+      time,
       location,
       category,
       subCategory,
@@ -233,6 +236,7 @@ export const updateEvent = async (
         title,
         description,
         date: date ? new Date(date) : event.date,
+        time: time ? time : event.time,
         location,
         category,
         subCategory,
@@ -246,6 +250,7 @@ export const updateEvent = async (
     if (members) {
       const parsedMembers =
         typeof members === "string" ? JSON.parse(members) : members;
+
 
       await prisma.eventMember.deleteMany({
         where: {
@@ -518,12 +523,6 @@ export const updateEventMember = async (
 
     if (!member || member.eventId !== id) {
       return res.status(404).json({ error: "Member not found" });
-    }
-
-    if (member.userId === event.createdById) {
-      return res
-        .status(400)
-        .json({ error: "Cannot change the creator's role" });
     }
 
     const updated = await prisma.eventMember.update({

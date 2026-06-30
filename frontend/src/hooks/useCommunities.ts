@@ -1,11 +1,14 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 
 import { api } from "../lib/axiosInstance";
 import type { Community } from "../types";
 
-
 const communitiesApi = {
-  
   getAllCommunities: async (
     search?: string,
     page = 1,
@@ -30,7 +33,6 @@ const communitiesApi = {
     const { data } = await api.get(`/communities/${id}`);
     return data;
   },
-
 
   createCommunity: async (formData: FormData): Promise<Community> => {
     const { data } = await api.post("/communities", formData, {
@@ -68,6 +70,8 @@ export const useCommunitiesInfiniteQuery = (search: string) => {
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.nextPage : undefined,
     initialPageParam: 1,
+    retry: 2,
+    retryDelay: 1000,
   });
 };
 

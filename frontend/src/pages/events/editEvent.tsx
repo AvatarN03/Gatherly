@@ -9,13 +9,13 @@ import {
   AlignLeft,
   MapPin,
   Tag,
-  Calendar,
-  Clock,
   UserCheck,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { Field } from '../../components/Field'
+import { EventDatePicker } from '../../components/events/EventDatePicker'
+import { EventTimePicker } from '../../components/events/EventTimePicker'
 
 import { useEventContext } from '../../context/eventContext'
 
@@ -25,8 +25,10 @@ import { useMembersQuery } from '../../hooks/useMembership'
 import { EventValidateForm } from '../../lib/validation'
 
 import { EVENT_MEMBER_ROLES, type EventItem, type EventMemberRole } from '../../types'
+
 import { EVENT_SUBCATEGORIES, inputClass } from '../../constant'
 import type { CommunityCategory } from '../../constant'
+
 
 const EditEventPage = () => {
   const navigate = useNavigate()
@@ -59,8 +61,7 @@ const EditEventPage = () => {
 
   const [selectedMembers, setSelectedMembers] = useState(
     (event.members ?? [])
-      .filter((m) => m.userId !== event.createdById)
-      .map((m) => ({ userId: m.userId, role: m.role })),
+      .map((m) => ({ userId: m.user.id, role: m.role })),
   )
 
   if (!isCreator) {
@@ -236,32 +237,19 @@ const EditEventPage = () => {
               </Field>
 
               {/* Date + Time */}
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Date *" error={errors.date}>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                      disabled={isPending}
-                      className={`${inputClass} pl-10`}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Date">
+                  <EventDatePicker
+                    value={formData.date}
+                    onChange={(date) => setFormData((prev) => ({ ...prev, date }))}
+                  />
                 </Field>
-                <Field label="Time *" error={errors.time}>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-                    <input
-                      type="time"
-                      name="time"
-                      value={formData.time}
-                      onChange={handleChange}
-                      disabled={isPending}
-                      className={`${inputClass} pl-10`}
-                    />
-                  </div>
+
+                <Field label="Time">
+                  <EventTimePicker
+                    value={formData.time}
+                    onChange={(time) => setFormData((prev) => ({ ...prev, time }))}
+                  />
                 </Field>
               </div>
 
@@ -343,12 +331,11 @@ const EditEventPage = () => {
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Loading members...
                   </div>
-                ) : members.filter((m) => m.userId !== event.createdById).length === 0 ? (
+                ) : members.length === 0 ? (
                   <p className="text-fog/40 text-sm text-center py-4">No other members in this community yet.</p>
                 ) : (
                   <div className="flex flex-col gap-3">
                     {members
-                      .filter((m) => m.userId !== event.createdById)
                       .map((member) => {
                         const selected = selectedMembers.find((m) => m.userId === member.userId)
                         return (

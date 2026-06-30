@@ -13,7 +13,7 @@ export interface User {
 
 export interface Community {
   id: string
-  name: string
+  title: string
   description: string
   imageUrl: string
   imageFileId: string
@@ -174,7 +174,6 @@ export interface EventRegistration {
   id: string
   eventId: string
   userId: string
-  status: RegistrationStatus
   registeredAt: string
   user?: User
 }

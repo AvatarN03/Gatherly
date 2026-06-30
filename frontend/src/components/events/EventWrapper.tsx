@@ -5,7 +5,7 @@ import { AlertTriangle } from 'lucide-react'
 
 import EventTopBar from './EventTopBar'
 import { EventSkeleton } from '../Skeleton'
-import DeleteEventModal from './deleteEventModal'
+import DeleteEventModal from './DeleteEventModal'
 
 
 import { EventContext } from '../../context/eventContext'
@@ -31,7 +31,7 @@ const EventWrapper = () => {
     useEffect(()=>{
       if(!clerkUser && isLoaded)
       {
-        navigate('/communities');
+        navigate('/events');
       }
     }, [clerkUser, navigate, isLoaded])
 
@@ -56,9 +56,8 @@ const EventWrapper = () => {
     )
   }
 
-  // ── Derive permissions ──────────────────────────────────────────────────────
-
-  const currentUserId = clerkUser?.id
+  // ── Derive permissions 
+  const currentUserId = clerkUser?.id;
 
   // Community-level membership
   const communityMembership = communityMembers.find(
@@ -75,8 +74,7 @@ const EventWrapper = () => {
   // Creator check
   const isCreator = event.createdById === currentUserId
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
+  // ── Render 
   return (
     <EventContext.Provider
       value={{

@@ -17,10 +17,9 @@ const EventTopBar = ({
   const navigate = useNavigate()
 
   // Who can manage team: creator, community admin, or event team member
-  const canManage = isCreator || isCommunityAdmin
 
   // Who can edit/delete: creator only (backend enforces this)
-  const canEditOrDelete = isCreator
+  const canEditOrDelete = isCreator;
 
   return (
     <div className="bg-night/90 border-b border-stone/50 px-4 py-3 flex justify-between items-center h-14">
@@ -35,11 +34,11 @@ const EventTopBar = ({
       </button>
 
       {/* Right: gated actions */}
-      {(canManage || canEditOrDelete) && (
+      {(isCommunityAdmin || canEditOrDelete) && (
         <div className="flex items-center gap-2">
 
           {/* Assign / Remove team — creator, community admin, event team */}
-          {canManage && (
+          {isCommunityAdmin && (
             <>
               <Link
                 to={`/events/${id}/team`}

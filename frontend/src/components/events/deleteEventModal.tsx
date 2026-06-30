@@ -1,5 +1,5 @@
-import { X, Trash } from 'lucide-react'
 import { useState } from 'react'
+import { X, Trash } from 'lucide-react'
 
 type Props = {
     eventTitle: string

@@ -12,6 +12,8 @@ import {
   Clock,
   UserCheck,
   UserX,
+  Mic2,
+  HandHelping,
 } from "lucide-react";
 
 export const COMMUNITY_CATEGORIES = [
@@ -242,3 +244,31 @@ export const STATUS_CONFIG = {
   APPROVED: { label: 'Approved', icon: UserCheck,   className: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
   REJECTED: { label: 'Rejected', icon: UserX,       className: 'text-red-400    bg-red-400/10    border-red-400/20'    },
 } as const
+
+
+export const EVENT_ROLE_BADGES = {
+  HOST: {
+    label: "Host",
+    icon: Crown,
+    className:
+      "text-amber-300 bg-amber-400/10 border-amber-400/20",
+  },
+  SPEAKER: {
+    label: "Speaker",
+    icon: Mic2,
+    className:
+      "text-sky-300 bg-sky-400/10 border-sky-400/20",
+  },
+  COORDINATOR: {
+    label: "Coordinator",
+    icon: Users,
+    className:
+      "text-lavender bg-orchid/10 border-orchid/20",
+  },
+  VOLUNTEER: {
+    label: "Volunteer",
+    icon: HandHelping,
+    className:
+      "text-emerald-300 bg-emerald-400/10 border-emerald-400/20",
+  },
+} as const;

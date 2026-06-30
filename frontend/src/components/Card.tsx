@@ -4,7 +4,7 @@ import type { Community, EventItem } from '../types'
 
 type CardProps = {
     type: 'community' | 'event'
-    item: Community | EventItem
+    item:  EventItem | Community
 }
 
 const Card = ({ type, item }: CardProps) => (
@@ -15,7 +15,7 @@ const Card = ({ type, item }: CardProps) => (
     >
         <img
             src={item.imageUrl || "/image_holder.jpg"}
-            alt={item.name}
+            alt={item.title}
             className="w-full h-46 object-cover"
         />
         <div className="absolute top-4 right-4">
@@ -28,7 +28,7 @@ const Card = ({ type, item }: CardProps) => (
         <div className="p-4">
 
             <h2 className="text-mist text-base font-medium mb-1 group-hover:text-purple-400 transition-colors truncate">
-                {item.name}
+                {item.title}
             </h2>
             <p className="text-lavender text-sm mb-3 line-clamp-2 text-ellipsis group-hover:underline underline-offset-4">{item.description}</p>
 

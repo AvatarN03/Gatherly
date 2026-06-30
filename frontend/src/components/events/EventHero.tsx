@@ -40,13 +40,13 @@ const EventHero = ({ event, isRegistered, isMutating, onJoin, onLeave }: Props) 
               )}
               {event.subCategory && (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full">
-                  {subCategoryLabel}
+                  {subCategoryLabel || "GENERAL"}
                 </span>
               )}
             </div>
 
-            <h1 className="text-2xl font-semibold text-mist leading-tight">{event.title}</h1>
-            <p className="text-fog text-sm mt-2 leading-relaxed max-w-3xl line-clamp-2">{event.description}</p>
+            <h1 className="text-2xl font-semibold text-mist leading-tight">{event.title }</h1>
+            <p className="text-fog text-sm mt-2 leading-relaxed max-w-3xl line-clamp-3">{event.description}</p>
           </div>
 
           {/* Meta pills */}
@@ -114,7 +114,7 @@ const EventHero = ({ event, isRegistered, isMutating, onJoin, onLeave }: Props) 
         </div>
 
         {/* Thumbnail */}
-        <div className="md:w-72 md:h-fit sm:w-48 sm:h-48 w-full h-52 shrink-0 rounded-xl overflow-hidden border border-[#182F3D]">
+        <div className="md:w-72 md:h-fit sm:w-48 sm:h-48 w-full h-52 shrink-0 rounded-xl overflow-hidden border border-slate">
           <img
             src={event.imageUrl || '/image_holder.jpg'}
             alt={event.title}

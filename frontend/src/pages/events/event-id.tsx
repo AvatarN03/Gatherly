@@ -2,18 +2,19 @@ import { useState } from 'react'
 import { LayoutGrid, Users } from 'lucide-react'
 
 import EventHero from '../../components/events/EventHero'
+import EventStats from '../../components/events/EventStats'
+import EventAboutTab from '../../components/events/OverViewTab'
+import EventTeamTab from '../../components/events/EventTeamTab'
 
+
+import { useEventContext } from '../../context/eventContext'
 
 import {
   useRegisterForEventMutation,
   useUnregisterFromEventMutation,
 } from '../../hooks/useEvents'
 
-import { useEventContext } from '../../context/eventContext'
 import type { EventMember } from '../../types'
-import EventStats from '../../components/events/EventStats'
-import EventAboutTab from '../../components/events/OverView'
-import EventTeamTab from '../../components/events/EventTeamTab'
 
 const EventId = () => {
   const { event } = useEventContext();

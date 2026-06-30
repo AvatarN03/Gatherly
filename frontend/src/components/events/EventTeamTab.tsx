@@ -1,15 +1,9 @@
+import { Badge } from "../Badge"
+
+import { EVENT_ROLE_BADGES } from "../../constant"
+
 import type { EventMember } from "../../types"
 
-
-const roleBadgeClass = (role: string) => {
-  const map: Record<string, string> = {
-    HOST:        'text-amber-300 bg-amber-400/10 border-amber-400/20',
-    SPEAKER:     'text-sky-300 bg-sky-400/10 border-sky-400/20',
-    COORDINATOR: 'text-lavender bg-orchid/10 border-orchid/20',
-    VOLUNTEER:   'text-emerald-300 bg-emerald-400/10 border-emerald-400/20',
-  }
-  return map[role] ?? 'text-fog bg-slate-800/50 border-slate-700'
-}
 
 const EventTeamTab = ({ members }: { members: EventMember[] }) => {
   if (!members.length) return (
@@ -39,9 +33,13 @@ const EventTeamTab = ({ members }: { members: EventMember[] }) => {
               <p className="text-fog/40 text-xs">{member.user.email}</p>
             </div>
           </div>
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${roleBadgeClass(member.role)}`}>
-            {member.role.charAt(0) + member.role.slice(1).toLowerCase()}
-          </span>
+          <Badge
+            config={
+              EVENT_ROLE_BADGES[
+              member.role as keyof typeof EVENT_ROLE_BADGES
+              ]
+            }
+          />
         </div>
       ))}
     </div>
