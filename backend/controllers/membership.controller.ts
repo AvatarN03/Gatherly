@@ -417,3 +417,23 @@ export const handleRequest = async (
     });
   }
 };
+
+export const getMyMemberships = async (req: Request, res: Response) => {
+  try {
+    const user = req?.user;
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const memberships = await prisma.membership.findMany({
+      where: { userId: user.id },
+      include: {
+        community: true,
+      },
+    });
+
+    res.json(memberships);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user memberships" });
+  }
+};

@@ -26,6 +26,7 @@ const communitiesApi = {
 
   getMyCommunities: async (): Promise<Community[]> => {
     const { data } = await api.get("/communities/my");
+    console.log("data from getMyCommunities:", data);
     return data;
   },
 

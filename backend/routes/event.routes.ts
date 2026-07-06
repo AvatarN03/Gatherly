@@ -14,6 +14,9 @@ import {
   removeEventMember,
   getEventRegistrations,
   updateEventMember,
+  getMyEvents,
+  getMyEventRegistrations,
+  getMyEventRoles,
 } from "../controllers/event.controller.ts";
 
 import { upload, uploadToImageKit } from "../services/uploadImage.ts";
@@ -22,6 +25,10 @@ const router = Router();
 
 // Public routes
 router.get("/", getEvents);
+router.get("/mine", authMiddleware, getMyEvents);
+router.get("/registrations/mine", authMiddleware, getMyEventRegistrations);
+router.get("/roles/mine", authMiddleware, getMyEventRoles);
+
 router.get("/:id", getEventById);
 
 // private routes

@@ -9,7 +9,7 @@ const Header = ({ title, search, onChange, url }: HeaderProps) => {
 
     const { userId } = useAuth();
 
-    return (<div className="sticky top-16 z-10 bg-night/60 border-b border-stone px-2 md:px-6 py-4 backdrop-blur-md">
+    return (<div className=" bg-night/60 border-b border-stone px-2 md:px-6 py-4 backdrop-blur-md">
         <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-xl md:text-2xl lg:text-4xl font-black tracking-widest text-fog shrink-0">{title}</h1>
             <div className="relative flex-1 lg:max-w-sm ml-auto">
