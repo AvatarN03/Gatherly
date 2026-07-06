@@ -7,6 +7,8 @@ import {
   deleteCommunity,
   getCommunities,
   getCommunityById,
+  getJoinedCommunities,
+  getManagedCommunities,
   getMyCommunities,
   updateCommunity,
 //   verifyCommunity,
@@ -21,6 +23,8 @@ router.get("/", getCommunities);
 
 // private routes 
 router.get("/my", authMiddleware, getMyCommunities);
+router.get("/managed", authMiddleware, getManagedCommunities);
+router.get("/joined", authMiddleware, getJoinedCommunities);
 
 // it must be below to avoid conflict with /my route
 router.get("/:id", getCommunityById);

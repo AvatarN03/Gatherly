@@ -16,7 +16,7 @@ const Card = ({ type, item }: CardProps) => (
         <img
             src={item.imageUrl || "/image_holder.jpg"}
             alt={item.title}
-            className="w-full h-46 object-cover"
+            className="w-full h-48 object-cover"
         />
         <div className="absolute top-4 right-4">
             {/* Category badge */}

@@ -56,6 +56,18 @@ const communitiesApi = {
     await api.delete(`/communities/${id}`);
   },
 
+  manageCommunity: async (): Promise<Community[]> => {
+    const { data } = await api.get("/communities/managed");
+    console.log("data from manageCommunity:", data);
+    return data;
+  },
+
+  joinedCommunities: async (): Promise<Community[]> => {
+    const { data } = await api.get("/communities/joined");
+    console.log("data from joinedCommunities:", data);
+    return data;
+  }
+
   // verifyCommunity: async (id: string): Promise<{ message: string }> => {
   //   const { data } = await api.get(`/communities/${id}/verify`);
   //   return data;
@@ -129,3 +141,17 @@ export const useDeleteCommunityMutation = () => {
     },
   });
 };
+
+export const useManageCommunityQuery = () => {
+  return useQuery({
+    queryKey: ["communities", "managed"],
+    queryFn: () => communitiesApi.manageCommunity(),
+  });
+}
+
+export const useJoinedCommunitiesQuery = () => {
+  return useQuery({
+    queryKey: ["communities", "joined"],
+    queryFn: () => communitiesApi.joinedCommunities(),
+  });
+}

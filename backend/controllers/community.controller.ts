@@ -118,13 +118,13 @@ export const getCommunityById = async (
           },
         },
         events: true,
-        members:{
-          select:{
-            id:true,
-            userId:true,
-            role:true,
-          }
-        }
+        members: {
+          select: {
+            id: true,
+            userId: true,
+            role: true,
+          },
+        },
       },
     });
 
@@ -234,6 +234,64 @@ export const deleteCommunity = async (
     res.json({ message: "Community deleted successfully" });
   } catch (error) {
     console.error("DELETE COMMUNITY ERROR:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+export const getManagedCommunities = async (req: Request, res: Response) => {
+  const user = req?.user;
+
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const managedCommunities = await prisma.community.findMany({
+      where: {
+        members: {
+          some: {
+            userId: user.id,
+            role: "ADMIN",
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.json(managedCommunities);
+  } catch (error) {
+    console.error("GET MANAGED COMMUNITIES ERROR:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+export const getJoinedCommunities = async (req: Request, res: Response) => {
+  const user = req?.user;
+
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const joinedCommunities = await prisma.community.findMany({
+      where: {
+        members: {
+          some: {
+            userId: user.id,
+            role: "MEMBER",
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.json(joinedCommunities);
+  } catch (error) {
+    console.error("GET JOINED COMMUNITIES ERROR:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
