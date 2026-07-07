@@ -4,6 +4,7 @@ import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
 
 import communityRoutes from "./routes/community.routes.ts";
+import dashboardRoutes from "./routes/dashboard.routes.ts";
 import eventRoutes from "./routes/event.routes.ts";
 import membershipRoutes from "./routes/membership.routes.ts";
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(clerkMiddleware());
 
 app.use("/api/communities", communityRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/memberships", membershipRoutes);
 app.use("/api/events", eventRoutes);
 

@@ -144,11 +144,11 @@ const NavGroup = ({
 const Sidebar = (
     {
         isAdmin,
-        adminCount,
+        
         mobileOpen,
         onMobileClose }: {
             isAdmin: boolean;
-            adminCount: number,
+           
             mobileOpen: boolean;
             onMobileClose: () => void;
         }) => {
@@ -252,26 +252,7 @@ const Sidebar = (
                     <NavGroup group={eventGroup} showLabels={showLabels} onNavigate={onMobileClose} />
                     {isAdmin && <NavGroup group={adminGroup} showLabels={showLabels} onNavigate={onMobileClose} />}
 
-                    {isAdmin && (
-                        <div
-                            title={
-                                !showLabels
-                                    ? `Admin in ${adminCount} ${adminCount === 1 ? "community" : "communities"}`
-                                    : undefined
-                            }
-                            className={`rounded-xl border border-orchid/30 bg-linear-to-br from-orchid/15 to-orchid/5 py-3 ${showLabels ? "px-3.5" : "flex justify-center px-0"
-                                }`}
-                        >
-                            <div className="flex items-center gap-2 text-pink-300">
-                                <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                {showLabels && (
-                                    <span className="whitespace-nowrap text-xs font-semibold">
-                                        Admin in {adminCount} {adminCount === 1 ? "community" : "communities"}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                  
                 </div>
             </aside >
         </>

@@ -182,3 +182,23 @@ export interface EventRegistration {
 
 export type RegistrationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
+export type DashboardStatsSummary = {
+  communitiesManaged: number
+  eventsCreated: number
+  pendingRequests: number
+  totalMembers: number
+  communitiesJoined: number
+  eventsRegistered: number
+  eventRoles: number
+}
+
+export type DashboardOverviewResponse = {
+  isAdmin: boolean
+  adminMemberships: Membership[]
+  myMemberships: Membership[]
+  createdEvents: EventItem[]
+  myRegistrations: EventRegistration[]
+  myEventRoles: EventMember[]
+  stats: DashboardStatsSummary
+}
+

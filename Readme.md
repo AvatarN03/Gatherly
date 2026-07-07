@@ -8,6 +8,10 @@
 |---|---|
 | ![Screenshot 1](./public/hero.png) | ![Screenshot 2](./public/communities.png) |
 | ![Screenshot 3](./public/community.png) | ![Screenshot 4](./public/event.png) |
+ | | |
+
+ 
+![Screenshot 4](./public/dashboard.png) 
 
 ## About
 
