@@ -4,7 +4,7 @@ import { CalendarPlus, Compass, Users } from 'lucide-react'
 
 export const Footer = () => {
     return (
-        <footer className="bg-night  border-t-2 border-b-8 border-stone px-12 pt-10 pb-6 mt-12 mb-4 rounded-b-xl rounded-t-sm">
+        <footer className="bg-night  border-t-2 border-b-8 border-stone px-12 pt-10 pb-6 mt-12 mb-4 rounded-b-xl rounded-t-sm max-w-7xl mx-auto">
 
             {/* Top grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-10">

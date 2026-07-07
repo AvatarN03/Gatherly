@@ -13,7 +13,7 @@ export interface User {
 
 export interface Community {
   id: string
-  title: string
+  name: string
   description: string
   imageUrl: string
   imageFileId: string
@@ -175,7 +175,9 @@ export interface EventRegistration {
   eventId: string
   userId: string
   registeredAt: string
-  user?: User
+  event: EventItem
+  user: User
+
 }
 
 export type RegistrationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';

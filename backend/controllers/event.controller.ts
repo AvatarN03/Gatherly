@@ -738,13 +738,11 @@ export const getMyEventRegistrations = async (req: Request, res: Response) => {
     });
 
     res.json(registrations);
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching my event registrations:", error);
     res.status(500).json({ error: "Failed to fetch my event registrations" });
   }
 };
-
 
 export const getMyEventRoles = async (req: Request, res: Response) => {
   try {
@@ -783,5 +781,64 @@ export const getMyEventRoles = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching my event roles:", error);
     res.status(500).json({ error: "Failed to fetch my event roles" });
+  }
+};
+
+export const getManagedEventRegistrations = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const events = await prisma.event.findMany({
+      where: {
+        OR: [
+          {
+            createdById: user.id,
+          },
+          {
+            members: {
+              some: {
+                userId: user.id,
+                role: {
+                  in: ["HOST", "COORDINATOR"],
+                },
+              },
+            },
+          },
+        ],
+        registrations: {
+          some: {},
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        date: true,
+        createdAt: true,
+        category: true,
+        subCategory: true,
+        _count: {
+          select: {
+            registrations: true,
+          },
+        },
+      },
+      orderBy: {
+        date: "asc",
+      },
+    });
+
+    return res.json(events);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Failed to fetch event registrations summary",
+    });
   }
 };

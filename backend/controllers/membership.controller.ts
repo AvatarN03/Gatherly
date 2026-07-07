@@ -183,7 +183,8 @@ export const removeCommunityMember = async (
 
     if (
       !requesterMembership ||
-      (requesterMembership.role !== "OWNER" && requesterMembership.role !== "ADMIN")
+      (requesterMembership.role !== "OWNER" &&
+        requesterMembership.role !== "ADMIN")
     ) {
       return res.status(403).json({ error: "Not authorized" });
     }
@@ -198,7 +199,9 @@ export const removeCommunityMember = async (
     }
 
     if (member.communityId !== communityId) {
-      return res.status(400).json({ error: "Member does not belong to this community" });
+      return res
+        .status(400)
+        .json({ error: "Member does not belong to this community" });
     }
 
     await prisma.membership.delete({
@@ -208,8 +211,7 @@ export const removeCommunityMember = async (
     });
 
     res.json({ message: "Member removed successfully" });
-  }
-  catch (error) {
+  } catch (error) {
     res.status(500).json({ error: "Failed to remove member" });
   }
 };
@@ -435,5 +437,64 @@ export const getMyMemberships = async (req: Request, res: Response) => {
     res.json(memberships);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch user memberships" });
+  }
+};
+
+export const getCommunitiesRequests = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const communities = await prisma.membership.findMany({
+      where: {
+        userId: user.id,
+        role: {
+          in: ["OWNER", "ADMIN"],
+        },
+      },
+      select: {
+        community: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            imageUrl: true,
+            category: true,
+            _count: {
+              select: {
+                requests: {
+                  where: {
+                    status: "PENDING",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const data = communities
+      .map(({ community }) => ({
+        id: community.id,
+        name: community.name,
+        description: community.description,
+        imageUrl: community.imageUrl,
+        category: community.category,
+        _count: {
+          requests: community._count.requests,
+        },
+      }))
+      .filter((community) => community._count.requests > 0);
+
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Failed to fetch community requests",
+    });
   }
 };

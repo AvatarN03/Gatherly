@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom'
 import { MapPin, Tag, Calendar } from 'lucide-react'
 import type { Community, EventItem } from '../types'
+import type { ReactNode } from 'react'
 
 type CardProps = {
     type: 'community' | 'event'
-    item:  EventItem | Community
+    item: EventItem | Community
+    badge?: ReactNode
 }
 
-const Card = ({ type, item }: CardProps) => (
+const Card = ({ type, item, badge}: CardProps) => (
     <Link
         to={type === 'community' ? `/communities/${item.id}` : `/events/${item.id}`}
 
@@ -18,6 +20,12 @@ const Card = ({ type, item }: CardProps) => (
             alt={item.title}
             className="w-full h-48 object-cover"
         />
+        {/* Role/status badge (top-left), only rendered when passed */}
+        {badge && (
+            <div className="absolute top-4 left-4 z-10">
+                {badge}
+            </div>
+        )}
         <div className="absolute top-4 right-4">
             {/* Category badge */}
             <span className="inline-flex items-center gap-1 text-sm font-medium text-mist bg-orchid/70 border-2 border-lavender/80 px-2 py-0.5 rounded-full mb-2 group-hover:bg-black group-hover:text-white transition-colors duration-200 ">

@@ -66,7 +66,9 @@ const communitiesApi = {
     const { data } = await api.get("/communities/joined");
     console.log("data from joinedCommunities:", data);
     return data;
-  }
+  },
+
+  
 
   // verifyCommunity: async (id: string): Promise<{ message: string }> => {
   //   const { data } = await api.get(`/communities/${id}/verify`);

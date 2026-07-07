@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 
 import { api } from "../lib/axiosInstance";
-import type { EventItem, EventRegistration } from "../types";
+import type { EventItem, EventMember, EventRegistration } from "../types";
 
 const eventsApi = {
   getAllEvents: async (
@@ -25,19 +25,19 @@ const eventsApi = {
     return data;
   },
 
-  getMyEvents: async () => {
+  getMyEvents: async (): Promise<EventItem[]> => {
     const { data } = await api.get("/events/mine");
     console.log("data from getMyEvents:", data);
     return data;
   },
 
-  getMyEventRoles: async () => {
+  getMyEventRoles: async (): Promise<EventMember[]> => {
     const { data } = await api.get("/events/roles/mine");
     console.log("data from getMyEventRoles:", data);
     return data;
   },
 
-  getMyRegistrations: async () => {
+  getMyRegistrations: async (): Promise<EventRegistration[]> => {
     const { data } = await api.get("/events/registrations/mine");
     console.log("data from getMyRegistrations:", data);
     return data;
@@ -47,6 +47,12 @@ const eventsApi = {
     eventId: string,
   ): Promise<EventRegistration[]> => {
     const { data } = await api.get(`/events/${eventId}/registrations`);
+    return data;
+  },
+
+  getEventsRegistrations: async (): Promise<any[]> => {
+    const { data } = await api.get("/events/registrations");
+    console.log("data from getEventsRegistrations:", data);
     return data;
   },
 
@@ -287,7 +293,10 @@ export const useRemoveEventMemberMutation = () => {
 };
 
 
-
-
+export const useEventsRegistrationsQuery = () =>
+  useQuery({
+    queryKey: ["events-registrations"],
+    queryFn: eventsApi.getEventsRegistrations,
+  });
 
 

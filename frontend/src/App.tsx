@@ -26,67 +26,68 @@ import { About } from "./pages/marketing/About";
 import { ContactUs } from "./pages/marketing/contactUs";
 
 
-import MyDashboardCommunities from "./pages/dashboard/my-communities";
-import DashboardLayout from "./pages/dashboard";
+import MyDashboardCommunities from "./pages/communities/my-communities";
 import PublicLayout from "./components/PublicLayout";
-import MyDashboardEvents from "./pages/dashboard/my-events";
-import MyEventAssignments from "./pages/dashboard/my-events-assignments";
-import MyEventRegistrations from "./pages/dashboard/my-events-registerations";
-import ManageCommunities from "./pages/dashboard/manage-communities";
-import JoinedCommunities from "./pages/dashboard/joined-communities";
+import MyDashboardEvents from "./pages/events/my-events";
+import MyEventAssignments from "./pages/events/my-events-assignments";
+import MyEventRegistrations from "./pages/events/my-events-registerations";
+import ManageCommunities from "./pages/communities/manage-communities";
+import JoinedCommunities from "./pages/communities/joined-communities";
+import AppLayout from "./components/AppLayout";
+import Dashboard from "./pages/dashboard";
+import CommunitiesRequest from "./pages/dashboard/communities-requests";
+import AllEventRegistrations from "./pages/dashboard/events-registrations";
 
 
 const App = () => {
   return (
     <BrowserRouter>
-  <Toaster position="bottom-right" />
+      <Toaster position="bottom-right" />
 
-  <Routes>
+      <Routes>
 
-    {/* Public Routes */}
-    <Route element={<PublicLayout />}>
-      <Route path="/" element={<Marketing />} />
+        {/* Public Routes */}
+        {/* Marketing */}
+        <Route element={<PublicLayout />}>
+          <Route index element={<Marketing />} />
+          <Route path="about" element={<About />} />
+          <Route path="contact" element={<ContactUs />} />
+        </Route>
 
-      <Route path="/about" element={<About />} />
-      <Route path="/contact" element={<ContactUs />} />
+        {/* Communities & Events */}
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/communities-requests" element={<CommunitiesRequest />} />
+          <Route path="/dashboard/events-registrations" element={<AllEventRegistrations />} />
 
-      <Route path="/communities" element={<Communities />} />
-      <Route path="/communities/create" element={<CreateCommunityPage />} />
+          <Route path="communities" element={<Communities />} />
+          <Route path="communities/my" element={<MyDashboardCommunities />} />
+          <Route path="communities/create" element={<CreateCommunityPage />} />
+          <Route path="communities/managed" element={<ManageCommunities />} />
+          <Route path="communities/joined" element={<JoinedCommunities />} />
 
-      <Route path="/communities/:id" element={<CommunityWrapper />}>
-        <Route index element={<CommunityId />} />
-        <Route path="edit" element={<EditCommunity />} />
-        <Route path="members" element={<CommunityMembersPanel />} />
-        <Route path="requests" element={<CommunityRequestPanel />} />
-      </Route>
+          <Route path="communities/:id" element={<CommunityWrapper />}>
+            <Route index element={<CommunityId />} />
+            <Route path="edit" element={<EditCommunity />} />
+            <Route path="members" element={<CommunityMembersPanel />} />
+            <Route path="requests" element={<CommunityRequestPanel />} />
+          </Route>
 
-      <Route path="/events" element={<Events />} />
-      <Route path="/events/create" element={<CreateEvent />} />
+          <Route path="events" element={<Events />} />
+          <Route path="events/my" element={<MyDashboardEvents />} />
+          <Route path="events/create" element={<CreateEvent />} />
+          <Route path="events/assigned" element={<MyEventAssignments />} />
+          <Route path="events/registered" element={<MyEventRegistrations />} />
 
-      <Route path="/events/:id" element={<EventWrapper />}>
-        <Route index element={<EventId />} />
-        <Route path="edit" element={<EditEvent />} />
-        <Route path="team" element={<EventTeam />} />
-        <Route path="registers" element={<GetEventRegisters />} />
-      </Route>
-    </Route>
-
-    {/* Dashboard Routes */}
-    <Route path="/dashboard" element={<DashboardLayout />}>
-      <Route index element={<h1 className="min-h-[200vh]">Dashboard</h1>} />
-      <Route path="communities" element={<MyDashboardCommunities />} />
-      <Route path="communities/managed" element={<ManageCommunities />} />
-      <Route path="communities/joined" element={<JoinedCommunities />} />
-      <Route path="communities/browse" element={<Communities />} />
-
-      <Route path="events" element={<MyDashboardEvents />} />
-      <Route path="events/assigned" element={<MyEventAssignments />} />
-      <Route path="events/registered" element={<MyEventRegistrations />} />
-      <Route path="events/browse" element={<Events />} />
-    </Route>
-
-  </Routes>
-</BrowserRouter>
+          <Route path="events/:id" element={<EventWrapper />}>
+            <Route index element={<EventId />} />
+            <Route path="edit" element={<EditEvent />} />
+            <Route path="team" element={<EventTeam />} />
+            <Route path="registers" element={<GetEventRegisters />} />
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

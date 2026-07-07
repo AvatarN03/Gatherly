@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/axiosInstance";
 
 import type {
+  Community,
   MemberRoleHandler,
   Membership,
   MembershipRequest,
@@ -95,6 +96,12 @@ const membershipApi = {
   getMyMemberships: async (): Promise<Membership[]> => {
     const { data } = await api.get("/memberships/mine");
     console.log("My Memberships:", data);
+    return data;
+  },
+
+  getCommunitiesRequests: async():Promise<Partial<Community>[]>=>{
+    const { data } = await api.get("/memberships/requests");
+    console.log("Communities Requests:", data);
     return data;
   }
 };
@@ -243,4 +250,10 @@ export const useMyMembershipRequestsQuery = () =>
   useQuery({
     queryKey: ["memberships", "mine"],
     queryFn: membershipApi.getMyMemberships,
+  });
+
+  export const useCommunitiesRequestsQuery = () =>
+  useQuery({
+    queryKey: ["communities-requests"],
+    queryFn: membershipApi.getCommunitiesRequests,
   });

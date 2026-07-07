@@ -30,10 +30,10 @@ const communityGroup: LinkGroup = {
     title: "Communities",
     icon: UsersRound,
     items: [
-        { title: "My", path: "/dashboard/communities",end: true, icon: FolderKanban },
-        { title: "Managed", path: "/dashboard/communities/managed",end: true, icon: ShieldCheck },
-        { title: "Joined", path: "/dashboard/communities/joined",end: true, icon: UserCheck },
-        { title: "Browse", path: "/dashboard/communities/browse", end: true,icon: Compass },
+        { title: "My", path: "/communities/my", end: true, icon: FolderKanban },
+        { title: "Managed", path: "/communities/managed", end: true, icon: ShieldCheck },
+        { title: "Joined", path: "/communities/joined", end: true, icon: UserCheck },
+        { title: "Browse", path: "/communities", end: true, icon: Compass },
     ],
 };
 
@@ -41,17 +41,18 @@ const eventGroup: LinkGroup = {
     title: "Events",
     icon: CalendarRange,
     items: [
-        { title: "My", path: "/dashboard/events",end: true, icon: Calendar },
-        { title: "Registered", path: "/dashboard/events/registered",end: true, icon: Ticket },
-        { title: "Assigned", path: "/dashboard/events/assigned",end: true, icon: ClipboardCheck },
-        { title: "Browse", path: "/dashboard/events/browse", end: true, icon: Search },
+        { title: "My", path: "/events/my", end: true, icon: Calendar },
+        { title: "Registered", path: "/events/registered", end: true, icon: Ticket },
+        { title: "Assigned", path: "/events/assigned", end: true, icon: ClipboardCheck },
+        { title: "Browse", path: "/events", end: true, icon: Search },
     ],
 };
 
 const adminGroup: LinkGroup = {
     title: "Admin",
     icon: Inbox,
-    items: [{ title: "Community Requests", path: "/dashboard/community-requests", icon: Inbox }],
+    items: [{ title: "Community Requests", path: "/dashboard/communities-requests", icon: Inbox },
+    { title: "Event Registrations", path: "/dashboard/events-registrations", icon: Inbox }],
 };
 
 
@@ -78,9 +79,9 @@ const NavGroup = ({
                 className={`flex bg-lavender/20 mb-2 w-full items-center gap-2 py-2.5 text-left ${showLabels ? "px-3" : "justify-center px-0"
                     }`}
             >
-                
-                    <GroupIcon className="h-5 w-5" strokeWidth={2} />
-                
+
+                <GroupIcon className="h-5 w-5" strokeWidth={2} />
+
                 {showLabels && (
                     <>
                         <span className="flex-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wider text-fog">
@@ -171,11 +172,11 @@ const Sidebar = (
 
     useEffect(() => {
         const mql = window.matchMedia("(min-width: 1024px)");
- 
+
         const handleChange = (e: MediaQueryListEvent) => {
             if (e.matches) onMobileClose();
         };
- 
+
         mql.addEventListener("change", handleChange);
         return () => mql.removeEventListener("change", handleChange);
     }, [onMobileClose]);
@@ -193,6 +194,7 @@ const Sidebar = (
             <aside
                 onMouseEnter={() => setExpanded(true)}
                 onMouseLeave={() => setExpanded(false)}
+                onClick={() => setExpanded(prev => !prev)}
                 className={`fixed inset-y-0 left-0 z-50 flex w-72 backdrop-blur-md h-dvh flex-col  overflow-hidden border-r border-stone bg-night md:bg-night/20 transition-all duration-300 rounded-tr-2xl rounded-br-2xl ease-out ${mobileOpen ? "translate-x-0 shadow-2xl shadow-black/50" : "-translate-x-full"
                     } lg:translate-x-0 ${expanded ? "w-[90%] lg:w-64 lg:shadow-2xl lg:shadow-black/50 border-r-2" : "lg:w-19"}`}
             >
