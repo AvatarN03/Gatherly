@@ -1,24 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,400;0,600;0,700;0,900;1,400;1,600;1,700;1,900&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  /* Backgrounds */
   --color-night: #0C1926;
   --color-deep-ocean: #0D1B22;
   --color-forest-teal: #0F393C;
-  
 
-  /* Text / Light Shades */
   --color-mist: #DDDFFC;
   --color-fog: #BEC6E9;
   --color-lavender: #AFB5F9;
 
-  /* Accent Colors */
   --color-slate: #182F3D;
   --color-stone: #70787A;
   --color-cocoa: #6E4A3B;
   --color-orchid: #A855F7;
 }
+
 
 body {
   box-sizing: border-box;
@@ -130,7 +129,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 @layer components {
   .underline-hover {
-    @apply relative inline-block;
+    position: relative;
+    display: inline-block;
   }
 
   .underline-hover::after {

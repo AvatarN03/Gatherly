@@ -4,7 +4,7 @@ import { CalendarPlus, Compass, Users } from 'lucide-react'
 
 export const Footer = () => {
     return (
-        <footer className="bg-night  border-t-2 border-b-8 border-stone px-12 pt-10 pb-6 mt-12 mb-4 rounded-b-xl rounded-t-sm max-w-7xl mx-auto">
+        <footer className="bg-night  border-t-2 border-b-8 border-stone px-12 pt-10 pb-6 mt-12 rounded-b-md rounded-t-sm max-w-7xl mx-auto">
 
             {/* Top grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
@@ -30,7 +30,7 @@ export const Footer = () => {
                         The home for communities that actually show up. Build, grow, and gather — all in one place.
                     </p>
                     <div className="flex gap-2">
-                        <Link to="https://github.com/gatherly"
+                        <Link to="https://github.com/AvatarN03/Gatherly" target="_blank" rel="noopener noreferrer"
                             className="rounded-lg border border-white/10 flex items-center justify-center
                 text-fog/50 px-2 hover:text-lavender hover:bg-white/5 transition-colors cursor-pointer">
                             <img
@@ -62,8 +62,11 @@ export const Footer = () => {
                 <div className="flex flex-col gap-2.5">
                     <p className="text-[11px] font-medium text-fog/60 tracking-widest uppercase mb-1">Company</p>
 
-                    <Link to="/" className="text-sm text-fog/50 hover:text-lavender transition-colors cursor-pointer w-fit">
+                    <Link to="/about" className="text-sm text-fog/50 hover:text-lavender transition-colors cursor-pointer w-fit">
                         About us
+                    </Link>
+                    <Link to="/contact" className="text-sm text-fog/50 hover:text-lavender transition-colors cursor-pointer w-fit">
+                        Contact us
                     </Link>
                 </div>
 

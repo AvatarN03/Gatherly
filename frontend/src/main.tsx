@@ -15,14 +15,16 @@ if (!clerkPubKey) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ClerkProvider publishableKey={clerkPubKey}
-      signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
-      afterSignOutUrl="/"
-    >
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </ClerkProvider>
+
+      <ClerkProvider publishableKey={clerkPubKey}
+        signInFallbackRedirectUrl="/dashboard"
+        signUpFallbackRedirectUrl="/dashboard"
+        afterSignOutUrl="/"
+      >
+        <QueryClientProvider client={queryClient}>
+
+          <App />
+        </QueryClientProvider>
+      </ClerkProvider>
   </StrictMode>,
 )

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Menu, Users, X, LogIn } from "lucide-react";
-import { SignInButton, useAuth, UserButton, useUser } from "@clerk/react";
+import { CalendarDays, Menu, Users, X, LogIn, SquarePen } from "lucide-react";
+import { SignInButton, SignUpButton, useAuth, UserButton, useUser } from "@clerk/react";
 
 export const Navbar = () => {
   const { isSignedIn, isLoaded } = useAuth();
@@ -29,14 +29,14 @@ export const Navbar = () => {
 
   return (
     <header
-      className={`min-h-16 md:h-16 w-full flex items-center border-b-3 border-fog/50 sticky top-0 z-50 rounded-b-md transition-all duration-300 bg-night ${isMenuOpen
+      className={`min-h-18 w-full flex items-center border-b-3 border-fog/50 sticky top-0 z-50 rounded-b-md transition-all duration-300 bg-night ${isMenuOpen
         ? "bg-night backdrop-blur-none border-transparent"
         : " backdrop-blur-sm"
         }`}
     >
       <nav
         ref={menuRef}  // ← ref wraps only the nav, not the whole page
-        className="flex items-center justify-between max-w-7xl mx-auto w-full px-3"
+        className="flex items-center justify-between max-w-400 mx-auto w-full px-3"
       >
         <div className="flex items-center gap-4">
 
@@ -48,7 +48,7 @@ export const Navbar = () => {
                 alt="Logo"
                 className="w-8 h-8 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"
               />
-              <h3>
+              <h3 className="hidden md:block text-mist text-lg font-semibold tracking-wider">
                 G
                 <span className="text-fog/70 group-hover:text-lavender underline-hover transition-colors">
                   atherly
@@ -56,7 +56,7 @@ export const Navbar = () => {
               </h3>
             </div>
           </Link>
-          <ul className="hidden md:flex gap-2">
+          <ul className="hidden md:flex gap-2 mx-2 text-slate-400">
             <li className="hidden lg:block">
               <a href="/#home" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Home
 
@@ -74,7 +74,7 @@ export const Navbar = () => {
 
               </a></li>
             <li>
-              <a href="/contact" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Contact us
+              <a href="/contact" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Contact
 
               </a></li>
 
@@ -86,21 +86,21 @@ export const Navbar = () => {
           <ul className="space-x-4 hidden md:flex">
             <Link
               to="/communities"
-              className="hover:text-lavender flex items-center transition-colors underline-hover text-sm p-2 rounded-sm bg-deep-ocean hover:bg-fog/10"
+              className="hover:text-lavender flex items-center transition-colors underline-hover text-xs lg:text-sm p-2 rounded-sm bg-deep-ocean hover:bg-fog/10"
             >
               <Users className="w-4 h-4 inline-block mr-1" />
               Communities
             </Link>
             <Link
               to="/events"
-              className="hover:text-lavender flex items-center transition-colors underline-hover text-sm p-2 rounded-sm bg-deep-ocean hover:bg-fog/10"
+              className="hover:text-lavender flex items-center transition-colors underline-hover text-xs lg:text-sm p-2 rounded-sm bg-deep-ocean hover:bg-fog/10"
             >
               <CalendarDays className="w-4 h-4 inline-block mr-1" />
               Events
             </Link>
           </ul>
 
-          <div className="min-w-24 flex items-center justify-center gap-4">
+          <div className="min-w-24 flex items-center justify-center gap-3">
             {isLoaded ? (
               !isSignedIn ? (
                 <SignInButton mode="modal">
@@ -112,7 +112,7 @@ export const Navbar = () => {
                 <>
                   <Link
                     to="/dashboard"
-                    className="px-4 py-2 border-orchid border-3 text-sm text-mist rounded-3xl bg-stone/30 hover:bg-orchid/10 transition-colors"
+                    className="px-2 py-1.5 border-orchid border text-sm text-mist rounded-xl hover:rounded-2xl bg-stone/30 hover:bg-orchid/10 transition-colors"
                   >
                     Dashboard
                   </Link>
@@ -167,13 +167,22 @@ export const Navbar = () => {
 
             {isLoaded ? (
               !isSignedIn ? (
-                <SignInButton mode="modal">
-                  <button className=" flex items-center justify-start w-full gap-2 rounded-xl bg-orchid/15 py-5 px-3 text-3xl cursor-pointer text-mist transition-colors hover:text-white">
-                    <LogIn className="w-10 h-10" /> Sign In
-                  </button>
-                </SignInButton>
+                <div className="flex items-center gap-3 w-full">
+                  <SignInButton mode="modal">
+                    <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orchid/15 py-4 px-3 text-xl cursor-pointer text-mist transition-colors hover:text-white">
+                      <LogIn className="w-6 h-6" /> Sign In
+                    </button>
+                  </SignInButton>
+
+                  <SignUpButton mode="modal">
+                    <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orchid/60 py-4 px-3 text-xl cursor-pointer text-mist transition-colors hover:text-white">
+                    <SquarePen className="w-6 h-6" />
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </div>
               ) : (
-                <div className="flex items-center gap-3" onClick={closeMenu}>
+                <div className="flex items-center gap-3 my-4" onClick={closeMenu}>
                   <UserButton />
                   <span className="text-mist">{user?.firstName || "Profile"}</span>
                 </div>

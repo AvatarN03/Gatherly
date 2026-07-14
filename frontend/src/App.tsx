@@ -22,12 +22,11 @@ import EventWrapper from "./components/events/EventWrapper";
 
 
 import Marketing from "./pages/marketing"
-import { About } from "./pages/marketing/About";
-import { ContactUs } from "./pages/marketing/contactUs";
+import About  from "./pages/marketing/About";
 
 
 import MyDashboardCommunities from "./pages/communities/my-communities";
-import PublicLayout from "./components/PublicLayout";
+import PublicLayout from "./components/marketing/PublicLayout";
 import MyDashboardEvents from "./pages/events/my-events";
 import MyEventAssignments from "./pages/events/my-events-assignments";
 import MyEventRegistrations from "./pages/events/my-events-registerations";
@@ -36,7 +35,8 @@ import JoinedCommunities from "./pages/communities/joined-communities";
 import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/dashboard";
 import CommunitiesRequest from "./pages/dashboard/communities-requests";
-import AllEventRegistrations from "./pages/dashboard/events-registrations";
+import Contact from "./pages/marketing/Contact";
+// import AllEventRegistrations from "./pages/dashboard/events-registrations";
 
 
 const App = () => {
@@ -51,14 +51,14 @@ const App = () => {
         <Route element={<PublicLayout />}>
           <Route index element={<Marketing />} />
           <Route path="about" element={<About />} />
-          <Route path="contact" element={<ContactUs />} />
+          <Route path="contact" element={<Contact />} />
         </Route>
 
         {/* Communities & Events */}
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/communities-requests" element={<CommunitiesRequest />} />
-          <Route path="/dashboard/events-registrations" element={<AllEventRegistrations />} />
+          {/* <Route path="/dashboard/events-registrations" element={<AllEventRegistrations />} /> */}
 
           <Route path="communities" element={<Communities />} />
           <Route path="communities/my" element={<MyDashboardCommunities />} />

@@ -5,7 +5,7 @@ export const Features = () => {
         <section id="features" className="w-full min-h-dvh py-25 md:px-12">
             <div className="w-full flex items-center gap-4 py-8">
                 {/* Left fading line */}
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-orchid/70" />
+                <div className="flex-1 h-px bg-linear-to-r from-transparent to-orchid/70" />
 
                 {/* Dot + Title + Dot */}
                 <div className="flex items-center gap-3">
@@ -17,7 +17,7 @@ export const Features = () => {
                 </div>
 
                 {/* Right fading line */}
-                <div className="flex-1 h-px bg-gradient-to-l from-transparent to-orchid/70" />
+                <div className="flex-1 h-px bg-linear-to-l from-transparent to-orchid/70" />
             </div>
 
             <div className="grid grid-cols md:grid-cols-12 gap-4 space-y-8">
