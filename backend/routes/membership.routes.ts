@@ -1,29 +1,44 @@
-import {Router} from 'express';
+import { Router } from "express";
 
-import { authMiddleware } from '../middleware/auth.ts';
+import { authMiddleware } from "../middleware/auth.ts";
 
-import { getCommunitiesRequests, getCommunityRequests, getMembers, getMyMemberships, getMyRequestForCommunity, getMyRequests, handleRequest, joinCommunity, leaveCommunity, removeCommunityMember, updateMemberRole, withdrawRequest } from '../controllers/membership.controller.ts';
+import {
+  getCommunitiesRequests,
+  getCommunityRequests,
+  getMembers,
+//   getMyMemberships,
+  getMyRequestForCommunity,
+//   getMyRequests,
+  handleRequest,
+  joinCommunity,
+  leaveCommunity,
+  removeCommunityMember,
+  updateMemberRole,
+  withdrawRequest,
+} from "../controllers/membership.controller.ts";
+import { upload, uploadToImageKit } from "../services/uploadImage.ts";
 
 const router = Router();
 
-// private routes 
+// private routes
 
-router.get("/mine", authMiddleware, getMyMemberships);
+// router.get("/mine", authMiddleware, getMyMemberships);
 
 router.get("/requests", authMiddleware, getCommunitiesRequests);
 
-router.get("/requests/mine", authMiddleware, getMyRequests);
+// router.get("/requests/mine", authMiddleware, getMyRequests);
 
+router.post(
+  "/:id/join",
+  authMiddleware,
+  upload.single("proofImage"),
+  uploadToImageKit("join-proofs"),
+  joinCommunity,
+);
 
-
-router.post("/:id/join", authMiddleware, joinCommunity);
-
-router.get("/:id/my-request", authMiddleware, getMyRequestForCommunity );
-
+router.get("/:id/my-request", authMiddleware, getMyRequestForCommunity);
 
 router.delete("/:id/withdraw", authMiddleware, withdrawRequest);
-
-
 
 router.patch("/:id/requests/:requestId", authMiddleware, handleRequest);
 
@@ -36,6 +51,5 @@ router.delete("/:id/leave", authMiddleware, leaveCommunity);
 
 // only owner/admin routes
 router.get("/:id/requests", authMiddleware, getCommunityRequests);
-
 
 export default router;

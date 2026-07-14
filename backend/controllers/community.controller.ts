@@ -7,33 +7,42 @@ export const createCommunity = async (req: CustomRequest, res: Response) => {
   try {
     const { name, description, location, category } = req.body;
 
-    const user = req?.user;
+    const user = req.user!;
 
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const community = await prisma.community.create({
-      data: {
-        name,
-        description,
-        imageUrl: req.imageUrl || "",
-        imageFileId: req.imageFileId,
-        category,
-        location,
-        createdById: user.id,
-
-        members: {
-          create: {
-            userId: user.id,
-            role: "OWNER",
+    const community = await prisma.$transaction(async (tx) => {
+      const created = await tx.community.create({
+        data: {
+          name,
+          description,
+          imageUrl: req.imageUrl || "",
+          imageFileId: req.imageFileId,
+          category,
+          location,
+          createdById: user.id,
+          members: {
+            create: {
+              userId: user.id,
+              role: "OWNER",
+            },
           },
         },
-      },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "COMMUNITY_CREATED",
+          communityId: created.id,
+          metadata: { name: created.name },
+        },
+      });
+
+      return created;
     });
 
     res.status(201).json(community);
   } catch (error) {
+    console.log("CREATE COMMUNITY ERROR:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -76,10 +85,7 @@ export const getCommunities = async (req: Request, res: Response) => {
 };
 
 export const getMyCommunities = async (req: Request, res: Response) => {
-  const user = req?.user;
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  const user = req.user!;
 
   const communities = await prisma.community.findMany({
     where: {
@@ -165,6 +171,8 @@ export const updateCommunity = async (req: Request, res: Response) => {
   const { id } = req.params as { id: string };
   const { name, description, category, location } = req.body;
 
+  const user = req.user!;
+
   try {
     const data: any = {
       name,
@@ -178,9 +186,37 @@ export const updateCommunity = async (req: Request, res: Response) => {
       data.imageFileId = req.imageFileId;
     }
 
-    const updatedCommunity = await prisma.community.update({
-      where: { id },
-      data,
+    const community = await prisma.community.findFirst({
+      where: {
+        id,
+        createdById: user.id,
+      },
+    });
+
+    if (!community) {
+      return res.status(403).json({
+        error: "Not authorized",
+      });
+    }
+
+    const updatedCommunity = await prisma.$transaction(async (tx) => {
+      const updated = await tx.community.update({
+        where: { id },
+        data,
+      });
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "COMMUNITY_UPDATED",
+          communityId: id,
+          metadata: {
+            changedFields: Object.keys(data),
+          },
+        },
+      });
+
+      return updated;
     });
 
     res.json(updatedCommunity);
@@ -195,11 +231,16 @@ export const deleteCommunity = async (
   res: Response,
 ) => {
   const { id } = req.params;
-  const user = req?.user;
+  const user = req.user!;
 
   try {
-    const community = await prisma.community.findUnique({
+     const community = await prisma.community.findUnique({
       where: { id },
+      select: {
+        name: true,
+        createdById: true,
+        imageFileId: true,
+      },
     });
 
     if (!community) {
@@ -225,7 +266,16 @@ export const deleteCommunity = async (
       }
     }
 
-    console.log("COMMUNITY TO DELETE");
+    // log BEFORE deleting the community — communityId FK now uses
+    // onDelete: SetNull, so this row survives, just loses the FK link
+    await prisma.activityLog.create({
+      data: {
+        actorId: user.id,
+        action: "COMMUNITY_DELETED",
+        communityId: id,
+        metadata: { name: community.name },
+      },
+    });
 
     await prisma.community.delete({
       where: { id },
@@ -239,11 +289,7 @@ export const deleteCommunity = async (
 };
 
 export const getManagedCommunities = async (req: Request, res: Response) => {
-  const user = req?.user;
-
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  const user = req.user!;
 
   try {
     const managedCommunities = await prisma.community.findMany({
@@ -268,11 +314,7 @@ export const getManagedCommunities = async (req: Request, res: Response) => {
 };
 
 export const getJoinedCommunities = async (req: Request, res: Response) => {
-  const user = req?.user;
-
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  const user = req.user!;
 
   try {
     const joinedCommunities = await prisma.community.findMany({

@@ -3,7 +3,7 @@ import { prisma } from "../utils/prisma.ts";
 
 const DASHBOARD_LIMIT = 4;
 
-export const getDashboardOverview = async (req: Request, res: Response) => {
+export const getUserDashboardOverview = async (req: Request, res: Response) => {
   try {
     const user = req.user;
 
@@ -12,19 +12,171 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
     }
 
     const [
-      adminMemberships,
       myMemberships,
-      createdEvents,
       myRegistrations,
-      myEventRoles,
+      myAssignments,
 
-      communitiesManagedCount,
-      communitiesJoinedCount,
-      eventsCreatedCount,
-      eventsRegisteredCount,
-      eventRolesCount,
+      communitiesJoined,
+      eventsRegistered,
+      eventAssignments,
+    ] = await Promise.all([
+      prisma.membership.findMany({
+        where: {
+          userId: user.id,
+        },
+        take: DASHBOARD_LIMIT,
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          role: true,
+          createdAt: true,
+
+          community: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true,
+              category: true,
+
+              _count: {
+                select: {
+                  members: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+
+      prisma.eventRegistration.findMany({
+        where: {
+          userId: user.id,
+        },
+        take: DASHBOARD_LIMIT,
+        orderBy: {
+          registeredAt: "desc",
+        },
+        select: {
+          id: true,
+          registeredAt: true,
+
+          event: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+              imageUrl: true,
+              category: true,
+              subCategory: true,
+
+              community: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+
+              _count: {
+                select: {
+                  registrations: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+
+      prisma.eventMember.findMany({
+        where: {
+          userId: user.id,
+        },
+        take: DASHBOARD_LIMIT,
+        orderBy: {
+          assignedAt: "desc",
+        },
+        select: {
+          id: true,
+          role: true,
+          assignedAt: true,
+
+          event: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+              imageUrl: true,
+
+              community: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+
+      prisma.membership.count({
+        where: {
+          userId: user.id,
+        },
+      }),
+
+      prisma.eventRegistration.count({
+        where: {
+          userId: user.id,
+        },
+      }),
+
+      prisma.eventMember.count({
+        where: {
+          userId: user.id,
+        },
+      }),
+    ]);
+
+    return res.json({
+      myMemberships,
+      myRegistrations,
+      myAssignments,
+
+      stats: {
+        communitiesJoined,
+        eventsRegistered,
+        eventAssignments,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user dashboard overview:", error);
+    return res.status(500).json({
+      error: "Failed to fetch user dashboard overview",
+    });
+  }
+};
+
+export const getAdminDashboardOverview = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const [
+      managedCommunities,
+      createdEvents,
+      pendingRequests,
+
+      communitiesManaged,
+      eventsCreated,
       pendingRequestsCount,
-      totalMembersCount,
+      totalMembers,
     ] = await Promise.all([
       // ==========================
       // Managed Communities Preview
@@ -51,46 +203,6 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
               name: true,
               imageUrl: true,
               category: true,
-
-              _count: {
-                select: {
-                  members: true,
-                  events: true,
-                  requests: {
-                    where: {
-                      status: "PENDING",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
-
-      // ==========================
-      // Joined Communities Preview
-      // ==========================
-      prisma.membership.findMany({
-        where: {
-          userId: user.id,
-        },
-        take: DASHBOARD_LIMIT,
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          role: true,
-          createdAt: true,
-
-          community: {
-            select: {
-              id: true,
-              name: true,
-              imageUrl: true,
-              category: true,
-
               _count: {
                 select: {
                   members: true,
@@ -120,7 +232,6 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
           imageUrl: true,
           category: true,
           subCategory: true,
-
           community: {
             select: {
               id: true,
@@ -128,7 +239,6 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
               imageUrl: true,
             },
           },
-
           _count: {
             select: {
               registrations: true,
@@ -137,82 +247,44 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
         },
       }),
 
-      // ==========================
-      // Registered Events Preview
-      // ==========================
-      prisma.eventRegistration.findMany({
+      prisma.membershipRequest.findMany({
         where: {
-          userId: user.id,
-        },
-        take: DASHBOARD_LIMIT,
-        orderBy: {
-          registeredAt: "desc",
-        },
-        select: {
-          id: true,
-          registeredAt: true,
+          status: "PENDING",
 
-          event: {
-            select: {
-              id: true,
-              title: true,
-              date: true,
-              time: true,
-              imageUrl: true,
-              category: true,
-              subCategory: true,
-
-              community: {
-                select: {
-                  id: true,
-                  name: true,
-                  imageUrl: true,
-                },
-              },
-
-              _count: {
-                select: {
-                  registrations: true,
+          community: {
+            members: {
+              some: {
+                userId: user.id,
+                role: {
+                  in: ["OWNER", "ADMIN"],
                 },
               },
             },
           },
         },
-      }),
 
-      // ==========================
-      // Assigned Events Preview
-      // ==========================
-      prisma.eventMember.findMany({
-        where: {
-          userId: user.id,
-        },
         take: DASHBOARD_LIMIT,
+
         orderBy: {
-          assignedAt: "desc",
+          createdAt: "desc",
         },
+
         select: {
           id: true,
-          role: true,
-          assignedAt: true,
+          createdAt: true,
 
-          event: {
+          user: {
             select: {
               id: true,
-              title: true,
-              date: true,
-              time: true,
+              name: true,
               imageUrl: true,
-              category: true,
-              subCategory: true,
+            },
+          },
 
-              community: {
-                select: {
-                  id: true,
-                  name: true,
-                  imageUrl: true,
-                },
-              },
+          community: {
+            select: {
+              id: true,
+              name: true,
             },
           },
         },
@@ -221,6 +293,7 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
       // ==========================
       // Counts
       // ==========================
+
       prisma.membership.count({
         where: {
           userId: user.id,
@@ -230,27 +303,9 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
         },
       }),
 
-      prisma.membership.count({
-        where: {
-          userId: user.id,
-        },
-      }),
-
       prisma.event.count({
         where: {
           createdById: user.id,
-        },
-      }),
-
-      prisma.eventRegistration.count({
-        where: {
-          userId: user.id,
-        },
-      }),
-
-      prisma.eventMember.count({
-        where: {
-          userId: user.id,
         },
       }),
       prisma.membershipRequest.count({
@@ -268,12 +323,8 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
           },
         },
       }),
-
       prisma.membership.aggregate({
         where: {
-          role: {
-            in: ["OWNER", "ADMIN", "MEMBER"],
-          },
           community: {
             members: {
               some: {
@@ -285,37 +336,56 @@ export const getDashboardOverview = async (req: Request, res: Response) => {
             },
           },
         },
+
         _count: {
           id: true,
         },
       }),
     ]);
 
-    const stats = {
-      communitiesManaged: communitiesManagedCount,
-      communitiesJoined: communitiesJoinedCount,
-      eventsCreated: eventsCreatedCount,
-      eventsRegistered: eventsRegisteredCount,
-      eventRoles: eventRolesCount,
-      pendingRequests: pendingRequestsCount,
-      totalMembers: totalMembersCount._count.id,
-    };
     return res.json({
-      isAdmin: communitiesManagedCount > 0,
-
-      adminMemberships,
-      myMemberships,
+      managedCommunities,
       createdEvents,
-      myRegistrations,
-      myEventRoles,
+      pendingRequests,
 
-      stats,
+      stats: {
+        communitiesManaged,
+        totalMembers: totalMembers._count.id,
+        eventsCreated,
+        pendingRequests: pendingRequestsCount,
+      },
     });
   } catch (error) {
-    console.error("Error fetching dashboard overview:", error);
-
+    console.error("Error fetching admin dashboard overview:", error);
     return res.status(500).json({
-      error: "Failed to fetch dashboard overview",
+      error: "Failed to fetch admin dashboard overview",
     });
   }
 };
+
+export const getIsAdmin = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const isAdmin = await prisma.membership.findFirst({
+      where: {
+        userId: user.id,
+        role: {
+          in: ["OWNER", "ADMIN"],
+        },
+      },
+    });
+
+    return res.json({ isAdmin: !!isAdmin });
+  }
+  catch (error) {
+    console.error("Error checking admin status:", error);
+    return res.status(500).json({ 
+      error: "Failed to check admin status"
+    });
+  }
+  }

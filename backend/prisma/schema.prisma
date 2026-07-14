@@ -42,6 +42,9 @@ model User {
 
   // Registered events
   eventRegistrations EventRegistration[]
+
+  activitiesPerformed ActivityLog[] @relation("ActivityActor")
+  activitiesTargeted  ActivityLog[] @relation("ActivityTarget")
 }
 
 // =========================
@@ -71,7 +74,8 @@ model Community {
   requests MembershipRequest[]
 
   // Community events
-  events Event[]
+  events       Event[]
+  activityLogs ActivityLog[]
 }
 
 // =========================
@@ -89,6 +93,9 @@ model Membership {
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   role CommunityRole @default(MEMBER)
+
+  proofUrl    String?
+  proofFileId String?
 
   createdAt DateTime @default(now())
 
@@ -109,7 +116,8 @@ model MembershipRequest {
 
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
-  proofUrl String?
+  proofUrl    String
+  proofFileId String
 
   status RequestStatus @default(PENDING)
 
@@ -152,6 +160,7 @@ model Event {
 
   // Registered attendees
   registrations EventRegistration[]
+  activityLogs  ActivityLog[]
 }
 
 // =========================
@@ -191,10 +200,44 @@ model EventRegistration {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id])
 
-
   registeredAt DateTime @default(now())
 
   @@unique([eventId, userId])
+}
+
+model ActivityLog {
+  id String @id @default(uuid())
+
+  // who performed the action
+  actorId String
+  actor   User   @relation("ActivityActor", fields: [actorId], references: [id])
+
+  // what kind of action — keep this a defined enum, not a free string,
+  // so querying/filtering by action type stays reliable
+  action ActivityAction
+
+  // scope: which community this action happened in/affects
+  // nullable because some actions might not be community-scoped later,
+  // but for now everything you've described IS community-scoped
+  communityId String?
+  community   Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
+
+  // optional: which event this action relates to, if relevant
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  // optional: which user was the target/subject of the action
+  // (e.g. admin removed THIS member, admin approved THIS user's request)
+  targetUserId String?
+  targetUser   User?   @relation("ActivityTarget", fields: [targetUserId], references: [id])
+
+  // free-form extra context, e.g. { "previousRole": "MEMBER", "newRole": "ADMIN" }
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([communityId])
+  @@index([actorId])
 }
 
 // =========================
@@ -225,4 +268,25 @@ enum EventMemberRole {
   SPEAKER
   COORDINATOR
   VOLUNTEER
+}
+
+enum ActivityAction {
+  COMMUNITY_CREATED
+  COMMUNITY_UPDATED
+  COMMUNITY_DELETED
+  MEMBERSHIP_REQUESTED
+  MEMBERSHIP_APPROVED
+  MEMBERSHIP_REJECTED
+  MEMBERSHIP_WITHDRAWN
+  MEMBER_REMOVED
+  MEMBER_LEFT
+  MEMBER_ROLE_UPDATED
+  EVENT_CREATED
+  EVENT_UPDATED
+  EVENT_DELETED               
+  EVENT_MEMBER_ASSIGNED
+  EVENT_MEMBER_ROLE_UPDATED    
+  EVENT_MEMBER_REMOVED
+  EVENT_REGISTRATION_CREATED
+  EVENT_REGISTRATION_CANCELLED
 }

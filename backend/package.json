@@ -19,7 +19,8 @@
     "express": "^5.2.1",
     "imagekit": "^6.0.0",
     "multer": "^2.1.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

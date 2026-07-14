@@ -20,12 +20,6 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
 
     const user = req.user;
 
-    if (!user) {
-      return res.status(401).json({
-        error: "Unauthorized",
-      });
-    }
-
     const community = await prisma.community.findUnique({
       where: {
         id: communityId,
@@ -75,6 +69,16 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
           skipDuplicates: true,
         });
       }
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "EVENT_CREATED",
+          communityId,
+          eventId: event.id,
+          metadata: { title: event.title },
+        },
+      });
 
       return event;
     });
@@ -140,11 +144,7 @@ export const getEvents = async (req: Request, res: Response) => {
 
 export const getMyEvents = async (req: Request, res: Response) => {
   try {
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const events = await prisma.event.findMany({
       where: {
@@ -233,13 +233,7 @@ export const updateEvent = async (
       members,
     } = req.body;
 
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({
-        error: "Unauthorized",
-      });
-    }
+    const user = req.user!;
 
     const event = await prisma.event.findUnique({
       where: { id },
@@ -257,54 +251,66 @@ export const updateEvent = async (
       });
     }
 
-    const updatedEvent = await prisma.event.update({
-      where: { id },
-      data: {
-        title,
-        description,
-        date: date ? new Date(date) : event.date,
-        time: time ? time : event.time,
-        location,
-        category,
-        subCategory,
-        ...(req.imageUrl && {
-          imageUrl: req.imageUrl,
-          imageFileId: req.imageFileId,
-        }),
-      },
-    });
-
-    if (members) {
-      const parsedMembers =
-        typeof members === "string" ? JSON.parse(members) : members;
-
-      await prisma.eventMember.deleteMany({
-        where: {
-          eventId: id,
-        },
-      });
-
-      await prisma.eventMember.create({
+    const updatedEvent = await prisma.$transaction(async (tx) => {
+      const updated = await tx.event.update({
+        where: { id },
         data: {
-          eventId: id,
-          userId: user.id,
-          role: "HOST",
+          title,
+          description,
+          date: date ? new Date(date) : event.date,
+          time: time ? time : event.time,
+          location,
+          category,
+          subCategory,
+          ...(req.imageUrl && {
+            imageUrl: req.imageUrl,
+            imageFileId: req.imageFileId,
+          }),
         },
       });
 
-      if (parsedMembers.length > 0) {
-        await prisma.eventMember.createMany({
-          data: parsedMembers
-            .filter((m: any) => m.userId !== user.id)
-            .map((m: any) => ({
-              eventId: id,
-              userId: m.userId,
-              role: m.role,
-            })),
-          skipDuplicates: true,
+      if (members) {
+        const parsedMembers =
+          typeof members === "string" ? JSON.parse(members) : members;
+
+        await tx.eventMember.deleteMany({
+          where: { eventId: id },
         });
+
+        await tx.eventMember.create({
+          data: {
+            eventId: id,
+            userId: user.id,
+            role: "HOST",
+          },
+        });
+
+        if (parsedMembers.length > 0) {
+          await tx.eventMember.createMany({
+            data: parsedMembers
+              .filter((m: any) => m.userId !== user.id)
+              .map((m: any) => ({
+                eventId: id,
+                userId: m.userId,
+                role: m.role,
+              })),
+            skipDuplicates: true,
+          });
+        }
       }
-    }
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "EVENT_UPDATED",
+          communityId: event.communityId,
+          eventId: id,
+          metadata: { title: updated.title },
+        },
+      });
+
+      return updated;
+    });
 
     res.json(updatedEvent);
   } catch (error) {
@@ -322,11 +328,7 @@ export const deleteEvent = async (
 ) => {
   try {
     const { id } = req.params;
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const event = await prisma.event.findUnique({
       where: { id },
@@ -343,9 +345,26 @@ export const deleteEvent = async (
         .json({ error: "Not authorized to delete this event" });
     }
 
-    if (event?.imageFileId) {
-      await imagekit.files.delete(event.imageFileId);
+    if (event.imageFileId) {
+      try {
+        await imagekit.files.delete(event.imageFileId);
+      } catch (deleteError) {
+        console.warn("Could not delete event image:", deleteError);
+      }
     }
+
+    // log before deleting — eventId FK uses onDelete: SetNull, so this
+    // survives with eventId becoming null; communityId still points to
+    // the (still-existing) community
+    await prisma.activityLog.create({
+      data: {
+        actorId: user.id,
+        action: "EVENT_DELETED",
+        communityId: event.communityId,
+        eventId: id,
+        metadata: { title: event.title },
+      },
+    });
 
     await prisma.event.delete({
       where: { id },
@@ -364,11 +383,7 @@ export const registerForEvent = async (
 ) => {
   try {
     const { id } = req.params;
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const event = await prisma.event.findUnique({
       where: { id },
@@ -400,11 +415,24 @@ export const registerForEvent = async (
       });
     }
 
-    const registration = await prisma.eventRegistration.create({
-      data: {
-        eventId: id,
-        userId: user.id,
-      },
+     const registration = await prisma.$transaction(async (tx) => {
+      const created = await tx.eventRegistration.create({
+        data: {
+          eventId: id,
+          userId: user.id,
+        },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "EVENT_REGISTRATION_CREATED",
+          communityId: event.communityId,
+          eventId: id,
+        },
+      });
+
+      return created;
     });
 
     res.status(201).json(registration);
@@ -414,18 +442,13 @@ export const registerForEvent = async (
   }
 };
 
-//TODO: handle edge case of owner unregister still there is no chance of having owner register
 export const unregisterFromEvent = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
   try {
     const { id } = req.params;
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const registration = await prisma.eventRegistration.findUnique({
       where: {
@@ -434,16 +457,28 @@ export const unregisterFromEvent = async (
           userId: user.id,
         },
       },
+      include: {
+        event: { select: { communityId: true } },
+      },
     });
 
     if (!registration) {
       return res.status(404).json({ error: "Registration not found" });
     }
 
-    await prisma.eventRegistration.delete({
-      where: {
-        id: registration.id,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.eventRegistration.delete({
+        where: { id: registration.id },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "EVENT_REGISTRATION_CANCELLED",
+          communityId: registration.event.communityId,
+          eventId: id,
+        },
+      });
     });
 
     res.json({ message: "Unregistered from event successfully" });
@@ -453,9 +488,8 @@ export const unregisterFromEvent = async (
   }
 };
 
-// ==================
 // Add Event Member (Admin/Coordinator)
-// ==================
+
 export const addEventMember = async (
   req: Request<{ id: string }>,
   res: Response,
@@ -463,54 +497,94 @@ export const addEventMember = async (
   try {
     const { id } = req.params;
     const { userId, role } = req.body;
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const currentUser = req.user!;
 
     const event = await prisma.event.findUnique({
       where: { id },
+      include: {
+        community: {
+          include: {
+            members: {
+              where: { userId: currentUser.id },
+            },
+          },
+        },
+        members: {
+          where: { userId: currentUser.id },
+        },
+      },
     });
 
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    // Authorization check - only creator can add members
-    if (event.createdById !== user.id) {
-      return res
-        .status(403)
-        .json({ error: "Not authorized to add members to this event" });
+    const communityMembership = event.community.members[0];
+    const eventMembership = event.members[0];
+
+    const isCommunityOwner = communityMembership?.role === "OWNER";
+    const isCommunityAdmin = communityMembership?.role === "ADMIN";
+    const isEventCoordinator = eventMembership?.role === "COORDINATOR";
+
+    if (!isCommunityOwner && !isCommunityAdmin && !isEventCoordinator) {
+      return res.status(403).json({
+        error: "You are not authorized to manage event members.",
+      });
     }
 
-    const member = await prisma.eventMember.create({
-      data: {
-        eventId: id,
-        userId,
-        role: role || "COORDINATOR",
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            imageUrl: true,
-          },
-        },
+    const existingMember = await prisma.eventMember.findUnique({
+      where: {
+        eventId_userId: { eventId: id, userId },
       },
     });
 
-    res.status(201).json(member);
-  } catch (error: any) {
-    if (error.code === "P2002") {
-      return res
-        .status(400)
-        .json({ error: "User is already a member of this event" });
+    if (existingMember) {
+      return res.status(400).json({
+        error: "User is already assigned to this event.",
+      });
     }
+
+    const member = await prisma.$transaction(async (tx) => {
+      const created = await tx.eventMember.create({
+        data: {
+          eventId: id,
+          userId,
+          role: role ?? "VOLUNTEER",
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, imageUrl: true },
+          },
+        },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          actorId: currentUser.id,
+          action: "EVENT_MEMBER_ASSIGNED",
+          communityId: event.communityId,
+          eventId: id,
+          targetUserId: userId,
+          metadata: { role: created.role },
+        },
+      });
+
+      return created;
+    });
+
+    return res.status(201).json(member);
+  } catch (error: any) {
     console.error("Error adding event member:", error);
-    res.status(500).json({ error: "Failed to add event member" });
+
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        error: "User is already assigned to this event.",
+      });
+    }
+
+    return res.status(500).json({
+      error: "Failed to add event member.",
+    });
   }
 };
 
@@ -521,26 +595,47 @@ export const updateEventMember = async (
   try {
     const { id, memberId } = req.params;
     const { role } = req.body;
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     if (!role) {
       return res.status(400).json({ error: "Role is required" });
     }
 
-    const event = await prisma.event.findUnique({ where: { id } });
+    const event = await prisma.event.findUnique({
+      where: { id },
+      include: {
+        community: {
+          include: {
+            members: {
+              where: {
+                userId: user.id,
+              },
+            },
+          },
+        },
+        members: {
+          where: {
+            userId: user.id,
+          },
+        },
+      },
+    });
 
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    if (event.createdById !== user.id) {
-      return res
-        .status(403)
-        .json({ error: "Not authorized to update members of this event" });
+    const communityMembership = event.community.members[0];
+    const eventMembership = event.members[0];
+
+    const isOwner = communityMembership?.role === "OWNER";
+    const isAdmin = communityMembership?.role === "ADMIN";
+    const isCoordinator = eventMembership?.role === "COORDINATOR";
+
+    if (!isOwner && !isAdmin && !isCoordinator) {
+      return res.status(403).json({
+        error: "Not authorized to update event members",
+      });
     }
 
     const member = await prisma.eventMember.findUnique({
@@ -551,53 +646,101 @@ export const updateEventMember = async (
       return res.status(404).json({ error: "Member not found" });
     }
 
-    const updated = await prisma.eventMember.update({
-      where: { id: memberId },
-      data: { role },
-      include: {
-        user: { select: { id: true, name: true, email: true, imageUrl: true } },
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.eventMember.update({
+        where: { id: memberId },
+        data: { role },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, imageUrl: true },
+          },
+        },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "EVENT_MEMBER_ROLE_UPDATED",
+          communityId: event.communityId,
+          eventId: id,
+          targetUserId: member.userId,
+          metadata: { previousRole: member.role, newRole: role },
+        },
+      });
+
+      return result;
     });
 
-    res.json(updated);
+    return res.json(updated);
   } catch (error) {
     console.error("Error updating event member:", error);
-    res.status(500).json({ error: "Failed to update event member" });
+    return res.status(500).json({
+      error: "Failed to update event member",
+    });
   }
 };
 
-// ==================
 // Remove Event Member
-// ==================
+
 export const removeEventMember = async (
   req: Request<{ id: string; memberId: string }>,
   res: Response,
 ) => {
   try {
     const { id, memberId } = req.params;
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const event = await prisma.event.findUnique({
       where: { id },
+      include: {
+        community: {
+          include: {
+            members: { where: { userId: user.id } },
+          },
+        },
+        members: { where: { userId: user.id } },
+      },
     });
 
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    // Authorization check - only creator can remove members
-    if (event.createdById !== user.id) {
-      return res
-        .status(403)
-        .json({ error: "Not authorized to remove members from this event" });
+    const communityMembership = event.community.members[0];
+    const eventMembership = event.members[0];
+
+    const isOwner = communityMembership?.role === "OWNER";
+    const isAdmin = communityMembership?.role === "ADMIN";
+    const isCoordinator = eventMembership?.role === "COORDINATOR";
+
+    if (!isOwner && !isAdmin && !isCoordinator) {
+      return res.status(403).json({
+        error: "Not authorized to remove members from this event",
+      });
     }
 
-    await prisma.eventMember.delete({
+    const memberToRemove = await prisma.eventMember.findUnique({
       where: { id: memberId },
+    });
+
+    if (!memberToRemove || memberToRemove.eventId !== id) {
+      return res.status(404).json({ error: "Member not found" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.eventMember.delete({
+        where: { id: memberId },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          actorId: user.id,
+          action: "EVENT_MEMBER_REMOVED",
+          communityId: event.communityId,
+          eventId: id,
+          targetUserId: memberToRemove.userId,
+        },
+      });
     });
 
     res.json({ message: "Member removed from event successfully" });
@@ -607,9 +750,8 @@ export const removeEventMember = async (
   }
 };
 
-// ==================
 // Get Event Members
-// ==================
+
 export const getEventMembers = async (
   req: Request<{ id: string }>,
   res: Response,
@@ -638,20 +780,15 @@ export const getEventMembers = async (
   }
 };
 
-// ==================
 // Get Event Registrations
-// ==================
+
 export const getEventRegistrations = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
   try {
     const { id } = req.params;
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const event = await prisma.event.findUnique({
       where: { id },
@@ -672,12 +809,9 @@ export const getEventRegistrations = async (
     }
 
     const isCreator = event.createdById === user.id;
+    const isEventMember = event.members.length > 0;
 
-    const isCoordinator = event.members.some(
-      (member) => member.role === "COORDINATOR",
-    );
-
-    if (!isCreator && !isCoordinator) {
+    if (!isCreator && !isEventMember) {
       return res
         .status(403)
         .json({ error: "Not authorized to view registrations" });
@@ -706,11 +840,7 @@ export const getEventRegistrations = async (
 
 export const getMyEventRegistrations = async (req: Request, res: Response) => {
   try {
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const registrations = await prisma.eventRegistration.findMany({
       where: { userId: user.id },
@@ -746,11 +876,7 @@ export const getMyEventRegistrations = async (req: Request, res: Response) => {
 
 export const getMyEventRoles = async (req: Request, res: Response) => {
   try {
-    const user = req?.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const user = req.user!;
 
     const roles = await prisma.eventMember.findMany({
       where: { userId: user.id },
@@ -784,61 +910,58 @@ export const getMyEventRoles = async (req: Request, res: Response) => {
   }
 };
 
-export const getManagedEventRegistrations = async (
-  req: Request,
-  res: Response,
-) => {
-  try {
-    const user = req.user;
+// export const getManagedEventRegistrations = async (
+//   req: Request,
+//   res: Response,
+// ) => {
+//   try {
+//     const user = req.user!;
 
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+//     const events = await prisma.event.findMany({
+//       where: {
+//         OR: [
+//           {
+//             createdById: user.id,
+//           },
+//           {
+//             members: {
+//               some: {
+//                 userId: user.id,
+//                 role: {
+//                   in: ["HOST", "COORDINATOR"],
+//                 },
+//               },
+//             },
+//           },
+//         ],
+//         registrations: {
+//           some: {},
+//         },
+//       },
+//       select: {
+//         id: true,
+//         title: true,
+//         date: true,
+//         createdAt: true,
+//         imageUrl: true,
+//         category: true,
+//         subCategory: true,
+//         _count: {
+//           select: {
+//             registrations: true,
+//           },
+//         },
+//       },
+//       orderBy: {
+//         date: "asc",
+//       },
+//     });
 
-    const events = await prisma.event.findMany({
-      where: {
-        OR: [
-          {
-            createdById: user.id,
-          },
-          {
-            members: {
-              some: {
-                userId: user.id,
-                role: {
-                  in: ["HOST", "COORDINATOR"],
-                },
-              },
-            },
-          },
-        ],
-        registrations: {
-          some: {},
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        date: true,
-        createdAt: true,
-        category: true,
-        subCategory: true,
-        _count: {
-          select: {
-            registrations: true,
-          },
-        },
-      },
-      orderBy: {
-        date: "asc",
-      },
-    });
-
-    return res.json(events);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      error: "Failed to fetch event registrations summary",
-    });
-  }
-};
+//     return res.json(events);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       error: "Failed to fetch event registrations summary",
+//     });
+//   }
+// };

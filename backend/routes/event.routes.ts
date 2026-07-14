@@ -17,17 +17,19 @@ import {
   getMyEvents,
   getMyEventRegistrations,
   getMyEventRoles,
-  getManagedEventRegistrations,
+  // getManagedEventRegistrations,
 } from "../controllers/event.controller.ts";
 
 import { upload, uploadToImageKit } from "../services/uploadImage.ts";
+import { validate } from "../middleware/validate.ts";
+import { eventSchema } from "../lib/event-schema.ts";
 
 const router = Router();
 
 // Public routes
 router.get("/", getEvents);
 router.get("/mine", authMiddleware, getMyEvents);
-router.get("/registrations", authMiddleware, getManagedEventRegistrations);
+// router.get("/registrations", authMiddleware, getManagedEventRegistrations);
 router.get("/registrations/mine", authMiddleware, getMyEventRegistrations);
 router.get("/roles/mine", authMiddleware, getMyEventRoles);
 
@@ -39,6 +41,7 @@ router.post(
   authMiddleware,
   upload.single("eventImage"),
   uploadToImageKit("events"),
+  validate(eventSchema),
   createEvent,
 );
 
@@ -47,6 +50,7 @@ router.patch(
   authMiddleware,
   upload.single("updateEventImage"),
   uploadToImageKit("events"),
+   validate(eventSchema),
   updateEvent,
 );
 
