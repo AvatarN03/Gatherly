@@ -11,11 +11,10 @@ import { useUpdateCommunityMutation } from '../../hooks/useCommunities'
 
 import { COMMUNITY_CATEGORIES, inputClass } from '../../constant'
 
+import { resizeImage } from '../../lib/image'
 import { CommunityvalidateForm } from '../../lib/validation'
 
-import type { Community } from '../../types'
-
-
+import type { CreateCommunity } from '../../types'
 
 const EditCommunity = () => {
   const { community } = useCommunityContext();
@@ -24,11 +23,11 @@ const EditCommunity = () => {
 
   const updateMutation = useUpdateCommunityMutation();
 
-  const [errors, setErrors] = useState<Partial<Community>>({});
+  const [errors, setErrors] = useState<Partial<CreateCommunity>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Partial<Community>>({
+  const [formData, setFormData] = useState<CreateCommunity>({
     name: community.name,
     description: community.description,
     location: community.location,
@@ -40,17 +39,18 @@ const EditCommunity = () => {
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errors[name as keyof Community]) {
+    if (errors[name as keyof CreateCommunity]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
-  }
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0]
+     if (!file) return
+     const resized = await resizeImage(file)
+     setImageFile(resized)
+     setImagePreview(URL.createObjectURL(resized))
+   }
 
   const clearImage = () => {
     setImageFile(null)
@@ -58,7 +58,7 @@ const EditCommunity = () => {
   }
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!CommunityvalidateForm(formData, setErrors)) return
 
@@ -213,7 +213,7 @@ const EditCommunity = () => {
                       <X className="w-3.5 h-3.5" />
                     </button>
                     {/* Change image overlay button */}
-                    <label className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/80 hover:bg-slate-900 rounded-lg text-mist text-xs font-medium cursor-pointer transition-colors">
+                    <label className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-orchid/80 hover:bg-slate-900 rounded-lg text-mist text-xs font-medium cursor-pointer transition-colors">
                       <Pencil className="w-3 h-3" />
                       Change
                       <input

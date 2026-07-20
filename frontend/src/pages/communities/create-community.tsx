@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { ImagePlus, MapPin, Tag, AlignLeft, Users, ArrowLeft, Loader2, X } from 'lucide-react'
+import { ImagePlus, MapPin, Tag, AlignLeft, Users, Loader2, X } from 'lucide-react'
 import { useUser } from '@clerk/react'
 import toast from 'react-hot-toast'
 
@@ -9,6 +9,7 @@ import { Field } from '../../components/Field'
 
 import { useCreateCommunityMutation } from '../../hooks/useCommunities'
 
+import { resizeImage } from '../../lib/image'
 import { CommunityvalidateForm } from '../../lib/validation'
 
 import { COMMUNITY_CATEGORIES, inputClass } from '../../constant'
@@ -37,11 +38,12 @@ const CreateCommunityPage = () => {
     category: 'General',
   })
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+    const resized = await resizeImage(file)
+    setImageFile(resized)
+    setImagePreview(URL.createObjectURL(resized))
   }
 
   const clearImage = () => {
@@ -91,18 +93,11 @@ const CreateCommunityPage = () => {
   }
 
   return (
-    <div className=" bg-night/50 py-10 px-4">
-      <div className="max-w-5xl mx-auto">
+    <div className=" bg-night/50 py-10 px-4 min-h-[calc(100dvh-100px)]">
+      <div className="max-w-6xl mx-auto">
 
-        {/* Back + heading */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate('/communities')}
-            className="flex items-center text-fog/50 hover:text-mist text-sm transition-colors mb-4 hover:underline underline-offset-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Communities
-          </button>
+
           <h1 className="text-2xl font-medium text-mist">Create a Community</h1>
           <p className="text-fog/50 text-sm mt-1">Fill in the details to start your community</p>
         </div>
@@ -174,7 +169,7 @@ const CreateCommunityPage = () => {
                     value={formData.category}
                     onChange={handleChange}
                     disabled={createMutation.isPending}
-                    className={`${inputClass} pl-10 appearance-none`}
+                    className={`${inputClass} pl-10 appearance-none `}
                   >
                     {COMMUNITY_CATEGORIES.map(({ value, label }) => (
                       <option key={value} value={value} className="bg-forest-teal">

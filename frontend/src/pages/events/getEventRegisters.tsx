@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 
-import { useAuth } from '@clerk/react'
-
 import { format } from 'date-fns'
 
 import { Inbox, RefreshCw, X, Mail, Calendar } from 'lucide-react'
@@ -209,9 +207,8 @@ const RegistrationsList = ({
 )
 
 const GetEventRegisters = () => {
-  const { userId } = useAuth()
   const navigate = useNavigate()
-  const { event, isCreator, isCommunityAdmin } = useEventContext()
+  const { event, isCreator, isEventMember } = useEventContext()
 
   const [profileRegistration, setProfileRegistration] =
     useState<EventRegistration | null>(null)
@@ -223,11 +220,10 @@ const GetEventRegisters = () => {
     refetch,
   } = useEventRegistrationsQuery(event.id || '')
 
-  const currentMember = event?.members?.find((m) => m.user.id === userId)
-  const canViewRegistrations =
-    isCreator || isCommunityAdmin || currentMember?.role === 'COORDINATOR'
+  const canViewRegistrations = isCreator || isEventMember
 
   useEffect(() => {
+    
     if (!canViewRegistrations) {
       toast.error("You don't have permission to view registrations for this event.")
       navigate(`/events/${event.id}`)

@@ -224,7 +224,7 @@ const CreateEventPage = () => {
 
               {/* Sub-category */}
               {subcategories.length > 0 && (
-                <Field label="Sub-Category *">
+                <Field label="Sub-Category *" error={errors.subCategory}>
                   <div className="relative">
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
                     <select
@@ -262,14 +262,14 @@ const CreateEventPage = () => {
 
               {/* Date + Time */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Date">
+                <Field label="Date" error={errors.date}>
                   <EventDatePicker
                     value={formData.date}
                     onChange={(date) => setFormData((prev) => ({ ...prev, date }))}
                   />
                 </Field>
 
-                <Field label="Time">
+                <Field label="Time" error={errors.time}>
                   <EventTimePicker
                     value={formData.time}
                     onChange={(time) => setFormData((prev) => ({ ...prev, time }))}

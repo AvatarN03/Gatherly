@@ -1,52 +1,40 @@
+import { ClipboardCheck } from 'lucide-react'
+
 import Card from '../../components/Card'
+import { Error } from '../../components/Error'
+import { IsEmpty } from '../../components/IsEmpty'
+import { CardSkeleton } from '../../components/Skeleton'
+
 import { useMyEventRolesQuery } from '../../hooks/useEvents'
 
-const roleBadgeStyles: Record<string, string> = {
-  HOST: 'bg-purple-100 text-purple-700',
-  VOLUNTEER: 'bg-green-100 text-green-700',
-}
+import { EVENT_ROLE_BADGES, SKELETON_COUNT } from '../../constant'
+
 
 const MyEventAssignments = () => {
-  const { data, isLoading, isError, error } = useMyEventRolesQuery()
+  const { data, isLoading, isError, isRefetching, refetch } = useMyEventRolesQuery()
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="animate-pulse rounded-xl border border-gray-200 overflow-hidden"
-          >
-            <div className="h-36 bg-gray-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-3 bg-gray-200 rounded w-1/2" />
-              <div className="h-3 bg-gray-200 rounded w-2/3" />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 my-4 px-4">
+        {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+          <CardSkeleton key={i} />
         ))}
       </div>
-    )
+    );
   }
 
   if (isError) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-        <p className="text-red-600 font-medium">
-          Failed to load your event assignments
-        </p>
-        <p className="text-red-500 text-sm mt-1">
-          {(error as Error)?.message ?? 'Something went wrong. Please try again.'}
-        </p>
-      </div>
-    )
+    return <Error isRefetching={isRefetching} handleRetry={refetch} text="Couldn't load your events" />;
   }
 
   if (!data || data.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-        You don't have any event assignments yet.
-      </div>
+      <IsEmpty
+        text="You haven't been assigned to any events yet. Assign yourself to one to get started!"
+        link="Browse events"
+        href="/events"
+        Icon={ClipboardCheck}
+      />
     )
   }
 
@@ -68,14 +56,16 @@ const MyEventAssignments = () => {
             type="event"
             item={assignment.event}
             badge={
-              <span
-                className={`inline-flex items-center text-sm font-medium border-2 px-2 py-0.5 rounded-full transition-colors duration-200 ${roleBadgeStyles[assignment.role] ?? 'bg-slate/50 border-slate/80 text-mist'
-                  }`}
+              <span className={`inline-flex items-center text-sm font-medium border-2 px-2 py-0.5 rounded-full transition-colors duration-200 ${
+                EVENT_ROLE_BADGES[assignment.role as keyof typeof EVENT_ROLE_BADGES]?.className ??
+                "bg-slate/50 border-slate/80 text-mist"
+              }`}
               >
-                {assignment.role}
+                {EVENT_ROLE_BADGES[assignment.role as keyof typeof EVENT_ROLE_BADGES]?.label ?? assignment.role}
               </span>
             }
           />
+
         ))}
       </div>
     </>

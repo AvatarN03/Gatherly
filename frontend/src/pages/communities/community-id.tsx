@@ -6,6 +6,8 @@ import CommunityHero from '../../components/communities/communityHero'
 import CommunityStats from '../../components/communities/communityStats'
 import OverviewTab from '../../components/communities/OverViewTabs'
 import EventsTab from '../../components/communities/EventsTab'
+import JoinRequestModal from '../../components/communities/JoinRequestModal'
+import ConfirmModal from '../../components/communities/ConfirmModal'
 
 import {
   useJoinCommunityMutation,
@@ -20,14 +22,40 @@ import { useCommunityContext } from '../../context/communityContext'
 const CommunityDetail = () => {
   const { id } = useParams<{ id: string }>()
 
-  const { community } = useCommunityContext();
+  const { community, userMembership } = useCommunityContext();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'events'>('overview')
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false)
 
 
   const joinMutation = useJoinCommunityMutation();
   const leaveMutation = useLeaveCommunityMutation();
   const withdrawMutation = useWithdrawRequestMutation();
+
+  const handleJoinSubmit = async (file: File): Promise<void> => {
+    joinMutation.mutate(
+      { communityId: id!, proofImage: file },
+      {
+        onSuccess: () => setIsJoinModalOpen(false),
+      }
+    )
+  }
+
+    const handleWithdrawConfirm = () => {
+    withdrawMutation.mutate(id!, {
+      onSuccess: () => setIsWithdrawModalOpen(false),
+    })
+  }
+
+  const handleLeaveConfirm = () => {
+    leaveMutation.mutate(id!, {
+      onSuccess: () => setIsLeaveModalOpen(false),
+    })
+  }
+
+  const isAdminLeaving = userMembership?.role === 'ADMIN'
 
 
   return (
@@ -49,9 +77,9 @@ const CommunityDetail = () => {
             joinPending={joinMutation.isPending}
             leavePending={leaveMutation.isPending}
             withdrawPending={withdrawMutation.isPending}
-            onJoin={() => joinMutation.mutate(id!)}
-            onLeave={() => leaveMutation.mutate(id!)}
-            onWithdraw={() => withdrawMutation.mutate(id!)}
+            onJoin={() => setIsJoinModalOpen(true)}
+            onLeave={() => setIsLeaveModalOpen(true)}
+            onWithdraw={() => setIsWithdrawModalOpen(true)}
           />
 
           <CommunityStats
@@ -97,6 +125,41 @@ const CommunityDetail = () => {
           </div>
         </div>
       </div>
+
+      <JoinRequestModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onSubmit={handleJoinSubmit}
+        isPending={joinMutation.isPending}
+      />
+
+        <ConfirmModal
+        isOpen={isWithdrawModalOpen}
+        onClose={() => setIsWithdrawModalOpen(false)}
+        onConfirm={handleWithdrawConfirm}
+        isPending={withdrawMutation.isPending}
+        title="Withdraw Request"
+        description="Are you sure you want to withdraw your join request? This action cannot be undone."
+        warningNote="Your submitted proof image will be permanently deleted from our servers."
+        confirmWord="WITHDRAW"
+        confirmButtonLabel="Withdraw Request"
+      />
+
+      <ConfirmModal
+        isOpen={isLeaveModalOpen}
+        onClose={() => setIsLeaveModalOpen(false)}
+        onConfirm={handleLeaveConfirm}
+        isPending={leaveMutation.isPending}
+        title="Leave Community"
+        description="Are you sure you want to leave this community?"
+        warningNote={
+          isAdminLeaving
+            ? "You are an Admin. Leaving will remove your admin privileges, any event roles (host/speaker/coordinator) you hold in this community, and your proof image."
+            : "Your event registrations and proof image associated with this community will be permanently deleted."
+        }
+        confirmWord="LEAVE"
+        confirmButtonLabel="Leave Community"
+      />
 
     </div>
   )
