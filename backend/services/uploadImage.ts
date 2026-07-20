@@ -5,7 +5,10 @@ import { toFile } from "@imagekit/nodejs";
 
 import imagekit from "../utils/imagekit.ts";
 
-export const upload = multer({ storage: multer.memoryStorage() });
+export const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB, matches ImageKit's own upload ceiling
+});
 
 export const uploadToImageKit =
   (folder: string) =>
@@ -35,12 +38,10 @@ export const uploadToImageKit =
       req.imageFileId = uploadResponse.fileId;
       next();
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          error:
-            "Image upload failed: " +
-            (error instanceof Error ? error.message : String(error)),
-        });
+      res.status(500).json({
+        error:
+          "Image upload failed: " +
+          (error instanceof Error ? error.message : String(error)),
+      });
     }
   };

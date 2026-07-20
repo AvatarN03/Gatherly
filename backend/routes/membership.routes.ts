@@ -17,6 +17,7 @@ import {
   withdrawRequest,
 } from "../controllers/membership.controller.ts";
 import { upload, uploadToImageKit } from "../services/uploadImage.ts";
+import { registerLimiter } from "../middleware/rateLimit.ts";
 
 const router = Router();
 
@@ -31,6 +32,7 @@ router.get("/requests", authMiddleware, getCommunitiesRequests);
 router.post(
   "/:id/join",
   authMiddleware,
+  registerLimiter,
   upload.single("proofImage"),
   uploadToImageKit("join-proofs"),
   joinCommunity,
@@ -38,7 +40,12 @@ router.post(
 
 router.get("/:id/my-request", authMiddleware, getMyRequestForCommunity);
 
-router.delete("/:id/withdraw", authMiddleware, withdrawRequest);
+router.delete(
+  "/:id/withdraw", 
+  authMiddleware,
+  registerLimiter, 
+  withdrawRequest
+);
 
 router.patch("/:id/requests/:requestId", authMiddleware, handleRequest);
 
@@ -47,7 +54,12 @@ router.delete("/:id/members/:memberId", authMiddleware, removeCommunityMember);
 
 router.get("/:id/members", authMiddleware, getMembers);
 
-router.delete("/:id/leave", authMiddleware, leaveCommunity);
+router.delete(
+  "/:id/leave", 
+  authMiddleware, 
+  registerLimiter,
+  leaveCommunity
+);
 
 // only owner/admin routes
 router.get("/:id/requests", authMiddleware, getCommunityRequests);

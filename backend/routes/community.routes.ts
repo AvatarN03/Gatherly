@@ -17,6 +17,7 @@ import {
 import { upload, uploadToImageKit } from "../services/uploadImage.ts";
 import { communitySchema, updateCommunitySchema } from "../lib/community-schema.ts";
 import { validate } from "../middleware/validate.ts";
+import { resizeImageIfNeeded } from "../services/resizeImage.ts";
 
 const router = Router();
 
@@ -36,6 +37,7 @@ router.post(
   "/",
   authMiddleware,
   upload.single("communityImage"),
+  resizeImageIfNeeded,
   uploadToImageKit("communities"),
   validate(communitySchema),
   createCommunity,

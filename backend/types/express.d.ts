@@ -1,12 +1,9 @@
+import { User } from "../generated/prisma/client.ts";
+
 declare global {
   namespace Express {
     interface Request {
-      user: {
-        id: string;
-        email: string;
-        name?: string | null;
-        imageUrl?: string | null;
-      };
+      user: User;
       imageUrl?: string;
       imageFileId?: string;
     }

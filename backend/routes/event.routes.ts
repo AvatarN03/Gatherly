@@ -23,6 +23,7 @@ import {
 import { upload, uploadToImageKit } from "../services/uploadImage.ts";
 import { validate } from "../middleware/validate.ts";
 import { eventSchema } from "../lib/event-schema.ts";
+import { registerLimiter } from "../middleware/rateLimit.ts";
 
 const router = Router();
 
@@ -64,8 +65,20 @@ router.delete(
 // Registration routes
 
 // -> user actions
-router.post("/:id/register", authMiddleware, registerForEvent);
-router.delete("/:id/register", authMiddleware, unregisterFromEvent);
+router.post(
+  "/:id/register", 
+  authMiddleware,
+  registerLimiter, 
+  registerForEvent
+);
+
+
+router.delete(
+  "/:id/register", 
+  authMiddleware,
+  registerLimiter, 
+  unregisterFromEvent
+);
 
 
 router.get("/:id/registrations", authMiddleware, getEventRegistrations);

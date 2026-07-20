@@ -22,6 +22,8 @@ model User {
   name     String
   imageUrl String
 
+  plan UserPlan @default(FREE)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -45,6 +47,11 @@ model User {
 
   activitiesPerformed ActivityLog[] @relation("ActivityActor")
   activitiesTargeted  ActivityLog[] @relation("ActivityTarget")
+}
+
+enum UserPlan {
+  FREE
+  PRO
 }
 
 // =========================
@@ -256,13 +263,6 @@ enum RequestStatus {
   REJECTED
 }
 
-// enum RegistrationStatus {
-//   PENDING
-//   APPROVED
-//   REJECTED
-//   CANCELLED
-// }
-
 enum EventMemberRole {
   HOST
   SPEAKER
@@ -283,9 +283,9 @@ enum ActivityAction {
   MEMBER_ROLE_UPDATED
   EVENT_CREATED
   EVENT_UPDATED
-  EVENT_DELETED               
+  EVENT_DELETED
   EVENT_MEMBER_ASSIGNED
-  EVENT_MEMBER_ROLE_UPDATED    
+  EVENT_MEMBER_ROLE_UPDATED
   EVENT_MEMBER_REMOVED
   EVENT_REGISTRATION_CREATED
   EVENT_REGISTRATION_CANCELLED

@@ -2,12 +2,28 @@ import type { Request, Response } from "express";
 import { prisma } from "../utils/prisma.ts";
 import { CustomRequest } from "../types/index.ts";
 import imagekit from "../utils/imagekit.ts";
+import { PLAN_LIMITS } from "../constant.ts";
 
 export const createCommunity = async (req: CustomRequest, res: Response) => {
   try {
     const { name, description, location, category } = req.body;
 
     const user = req.user!;
+
+    // 👇 Check user's community limit here
+    const communityCount = await prisma.community.count({
+      where: {
+        createdById: user.id,
+      },
+    });
+
+    const limit = PLAN_LIMITS[user.plan].communities;
+
+    if (communityCount >= limit) {
+      return res.status(403).json({
+        error: `Your ${user.plan} plan allows only ${limit} communities.`,
+      });
+    }
 
     const community = await prisma.$transaction(async (tx) => {
       const created = await tx.community.create({
@@ -234,7 +250,7 @@ export const deleteCommunity = async (
   const user = req.user!;
 
   try {
-     const community = await prisma.community.findUnique({
+    const community = await prisma.community.findUnique({
       where: { id },
       select: {
         name: true,

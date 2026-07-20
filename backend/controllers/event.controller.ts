@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { prisma } from "../utils/prisma.ts";
 import { CustomRequest } from "../types/index.ts";
 import imagekit from "../utils/imagekit.ts";
+import { PLAN_LIMITS } from "../constant.ts";
 
 export const createEvent = async (req: CustomRequest, res: Response) => {
   try {
@@ -29,6 +30,21 @@ export const createEvent = async (req: CustomRequest, res: Response) => {
     if (!community) {
       return res.status(404).json({
         error: "Community not found",
+      });
+    }
+
+    // 👇 Check event limit here
+    const eventCount = await prisma.event.count({
+      where: {
+        communityId,
+      },
+    });
+
+    const limit = PLAN_LIMITS[user.plan].eventsPerCommunity;
+
+    if (eventCount >= limit) {
+      return res.status(403).json({
+        error: `Your ${user.plan} plan allows only ${limit} events per community.`,
       });
     }
 
@@ -415,7 +431,7 @@ export const registerForEvent = async (
       });
     }
 
-     const registration = await prisma.$transaction(async (tx) => {
+    const registration = await prisma.$transaction(async (tx) => {
       const created = await tx.eventRegistration.create({
         data: {
           eventId: id,
