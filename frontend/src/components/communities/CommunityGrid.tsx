@@ -1,10 +1,10 @@
 
 import Card from '../Card'
-import Skeleton from '../Skeleton'
 
 
 import { SKELETON_COUNT } from '../../constant'
 import type { CommunityGridType } from '../../types'
+import { CardSkeleton } from '../Skeleton'
 
 
 
@@ -35,7 +35,7 @@ const CommunityGrid = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <Skeleton key={i} />
+              <CardSkeleton key={i} />
             ))
           : communities.map((community) => (
               <Card key={community.id} type="community" item={community} />
@@ -45,7 +45,7 @@ const CommunityGrid = ({
         {/* Append skeletons at the end of existing cards while fetching next page */}
         {isFetchingNextPage &&
           Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={`next-${i}`} />
+            <CardSkeleton key={`next-${i}`} />
           ))
         }
       </div>
@@ -53,10 +53,11 @@ const CommunityGrid = ({
       {/* Empty state */}
       {!isLoading && communities.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-lavender text-5xl mb-1">No communities found</p>
-          <p className="text-fog text-2xl">
+          <p className="text-lavender text-4xl mb-1">No communities found</p>
+          <p className="text-fog text-2xl my-4 font-light">
             {search ? 'Try a different search term' : 'Be the first to create one'}
           </p>
+          
         </div>
       )}
 

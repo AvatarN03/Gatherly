@@ -1,10 +1,11 @@
-import { MapPin, Calendar, CheckCircle, Loader2, LogOut, Tag, Clock, X, ShieldCheck } from 'lucide-react'
+import { MapPin, Calendar, CheckCircle, Loader2, LogOut, Tag, Clock, X, ShieldCheck, LogIn } from 'lucide-react'
+import { SignInButton } from '@clerk/react'
 
 import { useCommunityContext } from '../../context/communityContext';
 
-
 import type { Community } from '../../types'
 import { ROLE_CONFIG } from '../../constant'
+import { useAuth } from '@clerk/react';
 
 type Props = {
   community: Community
@@ -17,15 +18,30 @@ type Props = {
 }
 
 const CommunityHero = ({
-  community, 
+  community,
   joinPending, leavePending, withdrawPending,
   onJoin, onLeave, onWithdraw,
 }: Props) => {
-  const { userMembership, isCreator, userRequest } = useCommunityContext()
+  const { userMembership, isCreator, userRequest } = useCommunityContext();
+  const { userId } = useAuth();
   const role          = userMembership?.role;
   const requestStatus = userRequest?.status;
 
   const renderActions = () => {
+
+    // ── 0. Guest — not signed in at all ───────────────────────
+    if (!userId) {
+      return (
+        <SignInButton mode="modal">
+          <button
+            className="flex items-center gap-2 bg-orchid hover:bg-purple-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            Sign in to join
+          </button>
+        </SignInButton>
+      )
+    }
 
     if (userMembership) {
       const roleConfig = ROLE_CONFIG[role ?? 'MEMBER'] ?? ROLE_CONFIG['MEMBER']
@@ -40,12 +56,11 @@ const CommunityHero = ({
             {roleConfig.label}
           </span>
 
-         
-          {!isCreator && role === 'MEMBER' && (
+          {!isCreator && (role === 'MEMBER' || role === 'ADMIN') && (
             <button
               onClick={onLeave}
               disabled={leavePending}
-              className="flex items-center gap-2 bg-[#182F3D] hover:bg-red-500/10 border border-[#70787A33] hover:border-red-500/30 text-[#70787A] hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 rounded-lg transition-all"
+              className="flex items-center gap-2 bg-slate hover:bg-red-500/10 border border-[#70787A33] hover:border-red-500/30 text-stone hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 rounded-lg transition-all"
             >
               {leavePending
                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Leaving...</>
@@ -67,7 +82,7 @@ const CommunityHero = ({
         <button
           onClick={onWithdraw}
           disabled={withdrawPending}
-          className="flex items-center gap-2 bg-[#182F3D] hover:bg-red-500/10 border border-[#70787A33] hover:border-red-500/30 text-[#70787A] hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 rounded-lg transition-all"
+          className="flex items-center gap-2 bg-slate hover:bg-red-500/10 border border-[#70787A33] hover:border-red-500/30 text-stone hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 rounded-lg transition-all"
         >
           {withdrawPending
             ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Withdrawing...</>
@@ -87,7 +102,7 @@ const CommunityHero = ({
         <button
           onClick={onJoin}
           disabled={joinPending}
-          className="flex items-center gap-2 bg-[#182F3D] hover:bg-[#A855F7]/10 border border-[#70787A33] hover:border-[#A855F7]/30 text-[#70787A] hover:text-[#A855F7] text-sm px-4 py-2 rounded-lg transition-all"
+          className="flex items-center gap-2 bg-slate hover:bg-orchid/10 border border-[#70787A33] hover:border-orchid/30 text-stone hover:text-orchid text-sm px-4 py-2 rounded-lg transition-all"
         >
           {joinPending
             ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
@@ -102,7 +117,7 @@ const CommunityHero = ({
       <button
         onClick={onJoin}
         disabled={joinPending}
-        className="flex items-center gap-2 bg-[#A855F7] hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer"
+        className="flex items-center gap-2 bg-orchid hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer"
       >
         {joinPending
           ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
@@ -114,7 +129,7 @@ const CommunityHero = ({
 
   return (
     <div className="relative rounded-2xl border border-stone/30 bg-deep-ocean overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/25 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-purple-500/25 via-transparent to-transparent pointer-events-none" />
 
       <div className="relative flex flex-col sm:flex-row gap-6 p-6">
         <div className="flex-1 flex flex-col justify-between gap-4">
@@ -144,7 +159,7 @@ const CommunityHero = ({
           </div>
         </div>
 
-        <div className="md:w-72 md:h-fit sm:w-48 sm:h-48 w-full h-52 shrink-0 rounded-xl overflow-hidden border border-[#182F3D]">
+        <div className="md:w-72 md:h-fit sm:w-48 sm:h-48 w-full h-52 shrink-0 rounded-xl overflow-hidden border border-slate">
           <img
             src={community.imageUrl || '/image_holder.jpg'}
             alt={community.name}

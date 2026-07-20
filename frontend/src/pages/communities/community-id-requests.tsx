@@ -1,4 +1,5 @@
 import { useState } from 'react'
+
 import { useParams } from 'react-router-dom'
 import {
   ClipboardList, Check, X, Clock, Search,
@@ -11,35 +12,36 @@ import { useCommunityContext } from '../../context/communityContext';
 
 import { useCommunityRequestsQuery, useHandleRequestMutation } from '../../hooks/useMembership'
 
-import type { MembershipRequest, StatusFilter } from '../../types'
+import { formatDate } from '../../lib/date';
+
 import { STATUS_CONFIG } from '../../constant'
 
-
+import type { MembershipRequest, RequestHandelStatus } from '../../types'
 
 export const CommunityRequestPanel = () => {
   const { id } = useParams<{ id: string }>();
   const { isAdmin, isOwner } = useCommunityContext();
 
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState<StatusFilter>('PENDING');
 
   const { data: requests = [], isLoading } = useCommunityRequestsQuery(id || '', isAdmin || isOwner)
 
   const handleMutation = useHandleRequestMutation()
 
-  const handleRequest = (requestId: string, status: 'APPROVED' | 'REJECTED') => {
+  const handleRequest = (requestId: string, status: RequestHandelStatus) => {
     handleMutation.mutate({ communityId: id!, requestId, status })
   }
+  const filteredRequests = requests.filter((r) => {
+    const query = search.toLowerCase();
 
-  const filtered = requests.filter((r) => {
-    const matchesSearch =
-      r.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      r.user?.email?.toLowerCase().includes(search.toLowerCase())
-    const matchesStatus = filterStatus === 'ALL' || r.status === filterStatus
-    return matchesSearch && matchesStatus
-  })
+    return (
+      r.user?.name?.toLowerCase().includes(query) ||
+      r.user?.email?.toLowerCase().includes(query)
+    );
+  });
 
-  const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
+
+  const pendingCount = requests.length;
 
   if (!isAdmin && !isOwner) return (
     <div className="flex items-center justify-center py-24 text-fog/40 text-sm">
@@ -48,39 +50,24 @@ export const CommunityRequestPanel = () => {
   )
 
   return (
-    <div className="px-4 py-6 max-w-4xl mx-auto">
+    <div className="px-4 py-6 max-w-6xl mx-auto">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-semibold text-mist flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-lavender" />
-            Join Requests
-            {pendingCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orchid text-[10px] text-white font-bold">
-                {pendingCount}
-              </span>
-            )}
-          </h2>
-          <p className="text-fog/50 text-sm mt-0.5">{requests.length} total requests</p>
-        </div>
 
-        {/* Status filter pills */}
-        <div className="flex items-center gap-2">
-          {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as StatusFilter[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors cursor-pointer ${
-                filterStatus === s
-                  ? 'bg-orchid/20 border-orchid/40 text-lavender'
-                  : 'bg-stone/10 border-stone/30 text-fog/60 hover:border-stone/50'
-              }`}
-            >
-              {s === 'ALL' ? 'All' : STATUS_CONFIG[s].label}
-            </button>
-          ))}
-        </div>
+        <h2 className="text-lg font-semibold text-mist flex items-center gap-2">
+          <ClipboardList className="w-5 h-5 text-lavender" />
+          Join Requests
+          {pendingCount > 0 && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orchid text-[10px] text-white font-bold">
+              {pendingCount}
+            </span>
+          )}
+        </h2>
+        <p className="text-fog/50 text-sm mt-0.5">{requests.length} total requests</p>
+
+
+
       </div>
 
       {/* Search */}
@@ -101,18 +88,18 @@ export const CommunityRequestPanel = () => {
           <Loader2 className="w-5 h-5 animate-spin" />
           Loading requests...
         </div>
-      ) : filtered.length === 0 ? (
+      ) : filteredRequests.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <div className="p-4 bg-stone/10 rounded-full">
             <ClipboardList className="w-7 h-7 text-fog/30" />
           </div>
           <p className="text-fog/40 text-sm">
-            {filterStatus === 'PENDING' ? 'No pending requests.' : 'No requests match your filter.'}
+            {search ? 'No requests match your search.' : 'No requests available.'}
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((request: MembershipRequest) => {
+          {filteredRequests.map((request: MembershipRequest) => {
             const isActioning =
               handleMutation.isPending &&
               handleMutation.variables?.requestId === request.id
@@ -120,7 +107,7 @@ export const CommunityRequestPanel = () => {
             return (
               <div
                 key={request.id}
-                className="bg-deep-ocean/60 border border-stone/20 rounded-xl p-4 hover:border-stone/40 transition-colors"
+                className="relative bg-deep-ocean/60 border border-stone/20 rounded-xl p-4 hover:border-stone/40 transition-colors"
               >
                 <div className="flex items-start gap-4">
 
@@ -141,20 +128,16 @@ export const CommunityRequestPanel = () => {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-medium text-mist">{request.user?.name ?? '—'}</p>
-                      <Badge 
-                        config={STATUS_CONFIG[request.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.PENDING}
-                      />
-                    </div>
+
+                    <p className="text-sm font-medium text-mist">{request.user?.name ?? '—'}</p>
+
+
                     <p className="text-xs text-fog/50 mt-0.5">{request.user?.email}</p>
 
                     {/* Requested date */}
                     <p className="text-xs text-fog/40 mt-1 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      Requested {new Date(request.createdAt).toLocaleDateString('in-IN', {
-                        month: 'short', day: 'numeric', year: 'numeric',
-                      })}
+                      Requested {formatDate(request.createdAt)}
                     </p>
 
                     {/* Proof URL */}
@@ -172,8 +155,7 @@ export const CommunityRequestPanel = () => {
                     )}
                   </div>
 
-                  {/* Actions — only for PENDING */}
-                  {request.status === 'PENDING' && (
+                  <div className="space-y-6">
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => handleRequest(request.id, 'APPROVED')}
@@ -198,7 +180,17 @@ export const CommunityRequestPanel = () => {
                         Reject
                       </button>
                     </div>
-                  )}
+
+                    <div className="absolute bottom-4 right-4">
+                      <Badge
+                        config={
+                          STATUS_CONFIG[
+                          request.status as keyof typeof STATUS_CONFIG
+                          ] ?? STATUS_CONFIG.PENDING
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )

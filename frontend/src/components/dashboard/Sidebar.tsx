@@ -1,260 +1,162 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import {
-    ShieldCheck,
-    Compass,
-    Calendar,
-    Inbox,
-    ChevronRight,
-    type LucideIcon,
-    Home,
-    FolderKanban,
-    UsersRound,
-    UserCheck,
-    CalendarRange,
-    Ticket,
-    ClipboardCheck,
-    Search,
-} from "lucide-react";
+import { useState } from "react";
+import { Link, NavLink, matchPath, useLocation } from "react-router-dom";
+import type { NavSection } from "../../types";
+import { sections } from "../../constant";
+import { X } from "lucide-react";
 
-type LinkItem = { title: string; path: string; end?: boolean; icon?: LucideIcon | undefined };
-type LinkGroup = { title: string; icon: LucideIcon; items: LinkItem[] };
-
-const overviewLink: LinkItem = {
-    title: "Overview",
-    path: "/dashboard",
-    end: true
-};
-
-const communityGroup: LinkGroup = {
-    title: "Communities",
-    icon: UsersRound,
-    items: [
-        { title: "My", path: "/communities/my", end: true, icon: FolderKanban },
-        { title: "Managed", path: "/communities/managed", end: true, icon: ShieldCheck },
-        { title: "Joined", path: "/communities/joined", end: true, icon: UserCheck },
-        { title: "Browse", path: "/communities", end: true, icon: Compass },
-    ],
-};
-
-const eventGroup: LinkGroup = {
-    title: "Events",
-    icon: CalendarRange,
-    items: [
-        { title: "My", path: "/events/my", end: true, icon: Calendar },
-        { title: "Registered", path: "/events/registered", end: true, icon: Ticket },
-        { title: "Assigned", path: "/events/assigned", end: true, icon: ClipboardCheck },
-        { title: "Browse", path: "/events", end: true, icon: Search },
-    ],
-};
-
-const adminGroup: LinkGroup = {
-    title: "Admin",
-    icon: Inbox,
-    items: [{ title: "Community Requests", path: "/dashboard/communities-requests", icon: Inbox },
-    { title: "Event Registrations", path: "/dashboard/events-registrations", icon: Inbox }],
-};
-
-
-const NavGroup = ({
-    group,
-    showLabels,
-    onNavigate,
-    defaultOpen = true,
+const Sidebar = ({
+    isAdmin,
+    isOpen,
+    onClose,
 }: {
-    group: LinkGroup;
-    showLabels: boolean;
-    onNavigate?: () => void;
-    defaultOpen?: boolean;
+    isAdmin: boolean;
+    isOpen: boolean;
+    onClose: () => void;
 }) => {
-    const [open, setOpen] = useState(defaultOpen);
-    const GroupIcon = group.icon;
-    const showItems = showLabels ? open : true;
+    const location = useLocation();
 
-    return (
-        <div className="rounded-xl border border-slate/70 bg-night/40 overflow-x-hidden overflow-y-auto">
+    const isPathActive = (path?: string, end?: boolean) => {
+        if (!path) return false;
+        return !!matchPath({ path, end: end ?? false }, location.pathname);
+    };
+
+    const isSectionActive = (section: NavSection) => {
+        if (section.href && isPathActive(section.href, true)) return true;
+        return section.subItems?.some((si) => isPathActive(si.path, si.end)) ?? false;
+    };
+
+    const visibleSections = sections.filter((s) => s.key !== "Admin" || isAdmin);
+
+    // activeKey must be initialized before anything (like activeSection) reads it
+    const getInitialKey = () =>
+        visibleSections.find(isSectionActive)?.key ??
+        visibleSections[0].key;
+
+    const [activeKey, setActiveKey] = useState(getInitialKey);
+
+    const activeSection = visibleSections.find((s) => s.key === activeKey);
+
+    const renderRailIcon = (section: NavSection) => {
+        const Icon = section.icon;
+        const opened = activeKey === section.key;
+
+        return (
             <button
-                onClick={() => showLabels && setOpen((o) => !o)}
-                title={!showLabels ? group.title : undefined}
-                className={`flex bg-lavender/20 mb-2 w-full items-center gap-2 py-2.5 text-left ${showLabels ? "px-3" : "justify-center px-0"
+                key={section.key}
+                title={section.title}
+                onClick={() => setActiveKey(section.key)}
+                className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors cursor-pointer ${opened ? "bg-cocoa" : "hover:bg-stone/20"
                     }`}
             >
-
-                <GroupIcon className="h-5 w-5" strokeWidth={2} />
-
-                {showLabels && (
-                    <>
-                        <span className="flex-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wider text-fog">
-                            {group.title}
-                        </span>
-                        <ChevronRight
-                            className={`h-4 w-4 shrink-0 text-cocoa transition-transform duration-200 ${open ? "rotate-90" : ""
-                                }`}
-                        />
-                    </>
-                )}
+                <Icon className={`w-5 h-5 shrink-0 ${opened ? "text-white" : "text-white/60"}`} />
             </button>
+        );
+    };
 
-            <div
-                className={`grid  transition-all duration-200 ease-out ${showItems ? "grid-rows-[1fr] opacity-100 pl-3 " : "grid-rows-[0fr] opacity-0"
-                    }`}
-            >
-                <div className="overflow-hidden">
-                    <div className={`flex flex-col gap-3 pb-2 ${showLabels ? "px-2" : "px-1.5"}`}>
-                        {group.items.map((link) => {
-                            const Icon = link.icon;
-                            return (
-                                <NavLink
-                                    key={link.path}
-                                    to={link.path}
-                                    end={link.end}
-                                    title={link.title}
-                                    onClick={onNavigate}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-2.5 rounded-lg py-1.5 text-sm transition-colors ${showLabels ? "pl-2 pr-3" : "justify-center px-2"
-                                        } ${isActive
-                                            ? "bg-orchid text-white font-medium shadow-sm shadow-orchid/30"
-                                            : "text-fog hover:bg-cocoa/50 hover:text-mist"
-                                        }`
-                                    }
-                                >
-                                    {({ isActive }) => (
-                                        <>
-                                            {Icon && (
-                                                <Icon
-                                                    className={`h-4 w-4 ${isActive ? "text-white" : "text-stone"
-                                                        }`}
-                                                />
-                                            )}
-                                            {showLabels && (
-                                                <span className="truncate whitespace-nowrap">{link.title}</span>
-                                            )}
-                                        </>
-                                    )}
-                                </NavLink>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
+    const renderPanelContent = () => {
+        if (!activeSection) return null;
+        return (
+            <>
+                <p className="text-xs font-medium text-lavender px-2 mb-4 uppercase tracking-wide underline underline-offset-4 decoration-wavy decoration-cocoa">
+                    {activeSection.title}
+                </p>
 
-const Sidebar = (
-    {
-        isAdmin,
-        
-        mobileOpen,
-        onMobileClose }: {
-            isAdmin: boolean;
-           
-            mobileOpen: boolean;
-            onMobileClose: () => void;
-        }) => {
-    const [expanded, setExpanded] = useState(true);
-    const showLabels = expanded || mobileOpen;
-
-    // Lock body scroll while the mobile drawer is open, so the page behind
-    // it can't scroll underneath and fight with the drawer's own scrolling.
-    useEffect(() => {
-        if (!mobileOpen) return;
-
-        const { overflow, touchAction } = document.body.style;
-        document.body.style.overflow = "hidden";
-        document.body.style.touchAction = "none";
-
-        return () => {
-            document.body.style.overflow = overflow;
-            document.body.style.touchAction = touchAction;
-        };
-    }, [mobileOpen]);
-
-    useEffect(() => {
-        const mql = window.matchMedia("(min-width: 1024px)");
-
-        const handleChange = (e: MediaQueryListEvent) => {
-            if (e.matches) onMobileClose();
-        };
-
-        mql.addEventListener("change", handleChange);
-        return () => mql.removeEventListener("change", handleChange);
-    }, [onMobileClose]);
-
-    return (
-        <>
-            {mobileOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-                    onClick={onMobileClose}
-                    aria-hidden="true"
-                />
-            )}
-
-            <aside
-                onMouseEnter={() => setExpanded(true)}
-                onMouseLeave={() => setExpanded(false)}
-                onClick={() => setExpanded(prev => !prev)}
-                className={`fixed inset-y-0 left-0 z-50 flex w-72 backdrop-blur-md h-dvh flex-col  overflow-hidden border-r border-stone bg-night md:bg-night/20 transition-all duration-300 rounded-tr-2xl rounded-br-2xl ease-out ${mobileOpen ? "translate-x-0 shadow-2xl shadow-black/50" : "-translate-x-full"
-                    } lg:translate-x-0 ${expanded ? "w-[90%] lg:w-64 lg:shadow-2xl lg:shadow-black/50 border-r-2" : "lg:w-19"}`}
-            >
-                {/* Logo */}
-                <div
-                    className={`flex items-center gap-2.5 overflow-hidden border-b border-stone/70 py-8 ${showLabels ? "px-3.5" : "justify-center px-0"
-                        }`}
-                >
-                    <Link to="/">
-                        <div className="text-xl font-semibold tracking-wider text-lavender flex items-center gap-1 group">
-                            <img
-                                src="/logo.png"
-                                alt="Logo"
-                                className="w-8 h-8 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"
-                            />
-                            {showLabels && (
-                                <h3>
-                                    G
-                                    <span className="text-fog/70 group-hover:text-lavender underline-hover transition-colors">
-                                        atherly
-                                    </span>
-                                </h3>
-                            )}
-                        </div>
-                    </Link>
-                </div>
-
-                {/* Nav */}
-                <div className="min-h-0 flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-2 py-4">
+                {activeSection.href && !activeSection.subItems?.length && (
                     <NavLink
-                        to={overviewLink.path}
-                        end={overviewLink.end}
-                        title={overviewLink.title}
+                        to={activeSection.href}
+                        end
+                        onClick={onClose}
                         className={({ isActive }) =>
-                            `flex items-center gap-2.5 rounded-xl border py-3 text-sm font-medium transition-colors ${expanded ? "px-3.5" : "justify-center px-0"
-                            } ${isActive
-                                ? "border-cocoa border-2 bg-deep-ocean text-mist"
-                                : "border-slate/70 bg-deep-ocean/60 text-fog hover:bg-orchid/40 hover:text-fog"
+                            `px-3 py-2 rounded-md text-sm transition-colors ${isActive
+                                ? "bg-orchid text-black font-semibold"
+                                : "text-white/70 hover:bg-white/10"
                             }`
                         }
                     >
-                        <>
-                            <span
-                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate/60"                        >
-                                <Home
-                                    className="h-4 w-4 text-mist"
-                                    strokeWidth={2}
-                                />
-                            </span>
-                            {showLabels && <span className="whitespace-nowrap">{overviewLink.title}</span>}
-                        </>
+                        {activeSection.title}
                     </NavLink>
+                )}
 
-                    <NavGroup group={communityGroup} showLabels={showLabels} onNavigate={onMobileClose} />
-                    <NavGroup group={eventGroup} showLabels={showLabels} onNavigate={onMobileClose} />
-                    {isAdmin && <NavGroup group={adminGroup} showLabels={showLabels} onNavigate={onMobileClose} />}
+                {activeSection.subItems?.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            end={item.end}
+                            onClick={onClose}
+                            className={({ isActive }) =>
+                                `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${isActive
+                                    ? "bg-orchid/70 text-mist font-semibold translate-x-2.5"
+                                    : "text-fog hover:bg-stone/20 transition-transform  hover:translate-x-1.5"
+                                }`
+                            }
+                        >
+                            {ItemIcon && <ItemIcon className="w-4 h-4 shrink-0" />}
+                            {item.title}
+                        </NavLink>
+                    );
+                })}
+            </>
+        );
+    };
 
-                  
+    const renderHeader = () => (
+        <div className="flex items-center justify-between px-4 py-4 border-b border-fog/20">
+            <Link to="/" onClick={onClose}>
+                <div className="text-xl font-semibold tracking-wider text-lavender flex items-center gap-3 group">
+                    <img
+                        src="/logo.png"
+                        alt="Logo"
+                        className="w-12 h-12 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"
+                    />
+                    <h3 className="text-mist text-2xl font-medium tracking-wider">
+                        G
+                        <span className="text-fog/70 group-hover:text-lavender underline-hover transition-colors">
+                            atherly
+                        </span>
+                    </h3>
                 </div>
-            </aside >
+            </Link>
+
+            <button onClick={onClose} className=" lg:hidden p-2 rounded-md bg-slate hover:bg-stone/20 shrink-0">
+                <X className="w-5 h-5 text-white" />
+            </button>
+
+        </div>
+    );
+
+    const renderBody = () => (
+        <div className="flex flex-1 min-h-0">
+            {/* column 1: icons */}
+            <div className="flex flex-col items-center w-16 py-8 gap-6 border-r border-fog/40 bg-night">
+                {visibleSections.map(renderRailIcon)}
+            </div>
+            {/* column 2: links for the active section */}
+            <div className="flex-1 bg-deep-ocean p-3 pt-7 pr-5 flex flex-col gap-1 overflow-y-auto">
+                {renderPanelContent()}
+            </div>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Desktop */}
+            <div className="hidden lg:flex flex-col w-72 h-dvh bg-night shadow-lg shadow-black/40">
+                {renderHeader()}
+                {renderBody()}
+            </div>
+
+            {/* Mobile drawer */}
+            {isOpen && (
+                <div className="lg:hidden fixed inset-0 z-50 flex">
+                    <div className="flex flex-col w-72 h-dvh bg-night shadow-lg shadow-black/40">
+                        {renderHeader()}
+                        {renderBody()}
+                    </div>
+                    <div className="flex-1 bg-black/40 backdrop-blur-xs" onClick={onClose} />
+                </div>
+            )}
         </>
     );
 };

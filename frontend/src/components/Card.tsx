@@ -3,13 +3,18 @@ import { MapPin, Tag, Calendar } from 'lucide-react'
 import type { Community, EventItem } from '../types'
 import type { ReactNode } from 'react'
 
-type CardProps = {
-    type: 'community' | 'event'
-    item: EventItem | Community
-    badge?: ReactNode
-}
-
-const Card = ({ type, item, badge}: CardProps) => (
+type CardProps =
+  | {
+      type: "community";
+      item: Community;
+      badge?: ReactNode;
+    }
+  | {
+      type: "event";
+      item: EventItem;
+      badge?: ReactNode;
+    };
+const Card = ({ type, item, badge }: CardProps) => (
     <Link
         to={type === 'community' ? `/communities/${item.id}` : `/events/${item.id}`}
 
@@ -17,7 +22,7 @@ const Card = ({ type, item, badge}: CardProps) => (
     >
         <img
             src={item.imageUrl || "/image_holder.jpg"}
-            alt={item.title}
+            alt={type === "community" ? item.name : item.title}
             className="w-full h-48 object-cover"
         />
         {/* Role/status badge (top-left), only rendered when passed */}
@@ -36,7 +41,7 @@ const Card = ({ type, item, badge}: CardProps) => (
         <div className="p-4">
 
             <h2 className="text-mist text-base font-medium mb-1 group-hover:text-purple-400 transition-colors truncate">
-                {item.title}
+                {type === "community" ? item.name : item.title}
             </h2>
             <p className="text-lavender text-sm mb-3 line-clamp-2 text-ellipsis group-hover:underline underline-offset-4">{item.description}</p>
 

@@ -7,20 +7,18 @@ import Sidebar from "./dashboard/Sidebar";
 import DashboardHeader from "./dashboard/DashboardHeader";
 
 import { useAuth } from "@clerk/react";
-import { useCallback, useState } from "react";
-import { useDashboardOverview } from "../hooks/useDashboardOverview";
+import {useState } from "react";
+import {  useIsAdmin } from "../hooks/useDashboardOverview";
 
 const AppLayout = () => {
     const { isSignedIn } = useAuth();
-    const [mobileOpen, setMobileOpen] = useState(false);
-
-    const open = useCallback(() => setMobileOpen(true), []);
-    const close = useCallback(() => setMobileOpen(false), []);
+     const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
 
-    const { data, isLoading } = useDashboardOverview();
-    if (isLoading || !data) {
+    const { data: role, isLoading } = useIsAdmin(!!isSignedIn);
+
+    if (isSignedIn && isLoading) {
         return (
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="h-28 animate-pulse rounded-2xl bg-gray-100" />
@@ -36,8 +34,7 @@ const AppLayout = () => {
             </div>
         );
     }
-
-    const isAdmin = data.isAdmin;
+    const isAdmin = role?.isAdmin ?? false;
 
     return (
         <>
@@ -46,21 +43,23 @@ const AppLayout = () => {
                     !isSignedIn && <Navbar />
                 }
 
-                <div className="flex">
-                    {isSignedIn && (
+                <div className="flex ">
+                     {isSignedIn && (
                         <Sidebar
                             isAdmin={isAdmin}
-                           
-                            mobileOpen={mobileOpen}
-                            onMobileClose={close}
+                            isOpen={sidebarOpen}
+                            onClose={() => setSidebarOpen(false)}
                         />
                     )}
 
-                    <div className="flex-1 ml-auto lg:max-w-4xl lg:19 xl:max-w-6xl xl:pl-10">
+                    {/* w-20 matches the icon-rail width so content isn't tucked underneath it on desktop */}
+                    <div className={`flex-1 lg:ml-4`}>
                         {isSignedIn && (
-                            <DashboardHeader onMenuClick={open} />
+                            <DashboardHeader
+                                onOpen={() => setSidebarOpen(true)}
+                            />
                         )}
-
+ 
                         <Outlet />
                     </div>
                 </div>

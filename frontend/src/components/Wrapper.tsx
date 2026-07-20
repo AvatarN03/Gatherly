@@ -4,7 +4,7 @@ type WrapperProps = {
 
 const Wrapper = ({ children }: WrapperProps) => {
   return (
-    <div className="max-w-480 mx-auto px-2 md:px-4">
+    <div className="max-w-480 mx-auto">
       {children}
     </div>
   );

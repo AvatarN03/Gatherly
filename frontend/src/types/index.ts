@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 import type { CommunityCategory, EventSubCategory, ROLE_CONFIG } from '../constant';
+import type { LucideIcon } from 'lucide-react';
 
 export interface User {
   id: string
@@ -40,6 +41,7 @@ export interface Membership {
   createdAt: string
   user: User
   community?: Community
+  proofUrl?: string
 
 }
 
@@ -189,7 +191,7 @@ export type DashboardStatsSummary = {
   totalMembers: number
   communitiesJoined: number
   eventsRegistered: number
-  eventRoles: number
+  eventAssignments: number
 }
 
 export type DashboardOverviewResponse = {
@@ -202,3 +204,17 @@ export type DashboardOverviewResponse = {
   stats: DashboardStatsSummary
 }
 
+export interface NavSection {
+  key: string;
+  icon: LucideIcon;
+  title: string;
+  href?: string;
+  subItems: NavItem[];
+}
+
+export interface NavItem {
+  title: string;
+  path: string;
+  end?: boolean;
+  icon: LucideIcon;
+}

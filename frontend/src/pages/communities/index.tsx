@@ -2,13 +2,13 @@ import { useCallback, useState } from 'react'
 
 import toast from 'react-hot-toast'
 
+import Header from '../../components/Header'
+import { Error } from '../../components/Error'
 import CommunityGrid from '../../components/communities/CommunityGrid'
 
 import { useDebounce } from '../../hooks/useDebounceValue'
 import { useCommunitiesInfiniteQuery } from '../../hooks/useCommunities'
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver'
-import Header from '../../components/Header'
-import { Error } from '../../components/Error'
 
 
 const Communities = () => {
@@ -21,6 +21,7 @@ const Communities = () => {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    isRefetching,
     refetch,
     error,
   } = useCommunitiesInfiniteQuery(debouncedSearch)
@@ -49,7 +50,7 @@ const Communities = () => {
 
 
 
-  if (error) return <Error text={"Failed to load communities"} handleRetry={handleRetry} />
+  if (error) return <Error isRefetching={isRefetching} text={"Failed to load communities"} handleRetry={handleRetry} />
 
   return (
     <div className="min-h-screen bg-forest-teal/50 relative">
