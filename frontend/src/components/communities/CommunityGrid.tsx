@@ -1,12 +1,10 @@
 
 import Card from '../Card'
-
-
-import { SKELETON_COUNT } from '../../constant'
-import type { CommunityGridType } from '../../types'
 import { CardSkeleton } from '../Skeleton'
 
+import { SKELETON_COUNT } from '../../constant'
 
+import type { CommunityGridType } from '../../types'
 
 const CommunityGrid = ({
   communities,

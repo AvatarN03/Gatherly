@@ -1,64 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,400;0,600;0,700;0,900;1,400;1,600;1,700;1,900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,400;0,600;0,700;0,900;1,400;1,600;1,700;1,900&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-night: #0C1926;
-  --color-deep-ocean: #0D1B22;
-  --color-forest-teal: #0F393C;
+  --color-night: #0c1926;
+  --color-deep-ocean: #0d1b22;
+  --color-forest-teal: #0f393c;
 
-  --color-mist: #DDDFFC;
-  --color-fog: #BEC6E9;
-  --color-lavender: #AFB5F9;
+  --color-mist: #dddffc;
+  --color-fog: #bec6e9;
+  --color-lavender: #afb5f9;
 
-  --color-slate: #182F3D;
-  --color-stone: #70787A;
-  --color-cocoa: #6E4A3B;
-  --color-orchid: #A855F7;
+  --color-slate: #182f3d;
+  --color-stone: #70787a;
+  --color-cocoa: #6e4a3b;
+  --color-orchid: #a855f7;
 }
-
 
 body {
   box-sizing: border-box;
   color: var(--color-mist);
-  font-family:"Poppins", sans-serif;  
+  font-family: "Poppins", sans-serif;
   margin: 0 auto;
-  padding: 0 ;
+  padding: 0;
 }
 
 html {
-  background-color: var(--color-deep-ocean); 
+  background-color: var(--color-deep-ocean);
   scroll-behavior: smooth;
 
   background-image:
     /* Primary bloom — bright teal top-left, the main light source */
-    radial-gradient(ellipse 70% 55% at 8% 8%,
+    radial-gradient(
+      ellipse 70% 55% at 8% 8%,
       rgba(20, 120, 120, 0.58) 0%,
       rgba(15, 57, 60, 0.32) 45%,
       transparent 70%
     ),
-
     /* Secondary bloom — softer teal top-right */
-    radial-gradient(ellipse 50% 40% at 92% 6%,
-      rgba(15, 90, 90, 0.62) 0%,
-      transparent 80%
-    ),
-
+    radial-gradient(
+        ellipse 50% 40% at 92% 6%,
+        rgba(15, 90, 90, 0.62) 0%,
+        transparent 80%
+      ),
     /* Faint orchid accent — bottom-right so it doesn't compete */
-    radial-gradient(ellipse 45% 35% at 88% 92%,
-      rgba(150, 98, 168, 0.34) 0%,
-      transparent 65%
-    ),
-
+    radial-gradient(
+        ellipse 45% 35% at 88% 92%,
+        rgba(150, 98, 168, 0.34) 0%,
+        transparent 65%
+      ),
     /* Deep-ocean vignette — keeps center and edges dark & readable */
-    radial-gradient(ellipse 100% 100% at 50% 50%,
-      transparent 30%,
-      rgba(12, 25, 38, 0.65) 100%
-    ),
-
+    radial-gradient(
+        ellipse 100% 100% at 50% 50%,
+        transparent 30%,
+        rgba(12, 25, 38, 0.65) 100%
+      ),
     /* Dot grid — lavender dots at low opacity */
-    radial-gradient(circle, rgba(174, 181, 249, 0.30) 1px, transparent 1px);
+    radial-gradient(circle, rgba(174, 181, 249, 0.3) 1px, transparent 1px);
 
   background-size:
     100% 100%,
@@ -71,24 +70,22 @@ html {
   min-height: 100vh;
 }
 
-*::-webkit-scrollbar{
+*::-webkit-scrollbar {
   width: 10px;
 }
 
-*::-webkit-scrollbar-track{
+*::-webkit-scrollbar-track {
   background: var(--color-stone);
 }
 
-*::-webkit-scrollbar-thumb{
+*::-webkit-scrollbar-thumb {
   background-color: var(--color-fog);
   border-radius: 6px;
   border: 1px solid transparent;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-   
-    opacity: .2;
-
+  opacity: 0.2;
 }
 
 .event-datepicker-calendar.react-datepicker {
@@ -126,7 +123,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
 }
 
-
 @layer components {
   .underline-hover {
     position: relative;
@@ -146,5 +142,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .underline-hover:hover::after {
     width: 100%;
+  }
+
+  .glow-border {
+    /* oversize it so the rotation always fully covers the box, but the PARENT clips it */
+    inset: -50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 270deg,
+      #fff 330deg,
+      #f59e0b 360deg
+    );
+    animation: border-spin 3s linear infinite;
+  }
+
+  @keyframes border-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 }

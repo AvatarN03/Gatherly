@@ -32,6 +32,7 @@ const communitiesApi = {
 
   getCommunityById: async (id: string): Promise<Community> => {
     const { data } = await api.get(`/communities/${id}`);
+    console.log("data from getCommunityById:", data);
     return data;
   },
 
@@ -91,10 +92,10 @@ export const useCommunitiesInfiniteQuery = (search: string) => {
 };
 
 // fetch a single community
-export const useCommunityQuery = (id: string) => {
+export const useCommunityQuery = (id?: string) => {
   return useQuery({
     queryKey: ["community", id],
-    queryFn: () => communitiesApi.getCommunityById(id),
+    queryFn: () => communitiesApi.getCommunityById(id!),
     enabled: !!id,
   });
 };

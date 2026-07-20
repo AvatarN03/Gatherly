@@ -1,73 +1,66 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+
+import { AlertTriangle } from 'lucide-react'
 import { Outlet, useParams, useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/react'
-import { AlertTriangle } from 'lucide-react'
-
-import { CommunityContext } from '../../context/communityContext'
-
-import { useCommunityQuery, useDeleteCommunityMutation } from '../../hooks/useCommunities'
-import { useUserRequestQuery } from '../../hooks/useMembership'
 
 import CommunityTopBar from './CommunityTopBar'
 import DeleteCommunityModal from './DeleteCommunityModal'
 import { CommunitySkeleton } from '../Skeleton'
+import { IsEmpty } from '../IsEmpty'
+
+import { useCommunityQuery, useDeleteCommunityMutation } from '../../hooks/useCommunities'
+import { useUserRequestQuery } from '../../hooks/useMembership'
+
+import { CommunityContext } from '../../context/communityContext'
 
 const CommunityWrapper = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { user: clerkUser } = useUser()
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const navigate = useNavigate();
+  const { user: clerkUser } = useUser();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const { data: community, isLoading, isError } = useCommunityQuery(id || '')
+  const { data: community, isLoading, isError } = useCommunityQuery(id);
 
-  const checkMembership = community?.members?.find(
-    (m) => m.userId === clerkUser?.id
-  );
+  const userMembership = useMemo(
+    () => community?.members?.find((m) => m.userId === clerkUser?.id),
+    [community, clerkUser]
+  )
 
-  const shouldFetchUserRequest =
-    !!clerkUser &&
-    !!community &&
-    !checkMembership;
+  const isAuthenticated = !!clerkUser
+  const isMember = !!userMembership
+  const isCreator = userMembership?.role === 'OWNER'
+  const isAdmin = userMembership?.role === 'ADMIN' || isCreator;
 
-  const { data: userRequest } = useUserRequestQuery(id || '', {
+  const shouldFetchUserRequest = !!clerkUser && !!community && !isMember
+
+  const { data: userRequest } = useUserRequestQuery(id, {
     enabled: shouldFetchUserRequest,
-  });
+  })
 
-  const deleteMutation = useDeleteCommunityMutation();
-
-
+  const deleteMutation = useDeleteCommunityMutation()
 
   if (isLoading) return <CommunitySkeleton />
 
-  if (isError || !community) return (
-    <div className="min-h-screen bg-night flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="p-4 bg-red-500/10 rounded-full">
-          <AlertTriangle className="w-8 h-8 text-red-400" />
-        </div>
-        <p className="text-mist font-medium">Community not found</p>
-        <button
-          onClick={() => navigate('/communities')}
-          className="text-sm text-orchid hover:underline"
-        >
-          Back to communities
-        </button>
-      </div>
-    </div>
+  if (!id || isError || !community) return (    
+    <IsEmpty 
+    text="Community not found" 
+    href="/communities"
+    link="Back to Communities"
+    Icon={AlertTriangle} 
+    />
   )
 
-  const userMembership = community?.members?.find((m) => m.userId === clerkUser?.id)
-  const isCreator = community.createdById === clerkUser?.id
-  const isAdmin = userMembership?.role === 'ADMIN' || isCreator
 
   return (
 
-    <CommunityContext.Provider value={{ community, userMembership, userRequest, isCreator, isAdmin }}>
+    <CommunityContext.Provider value={{ community, userMembership, userRequest, isCreator, isAdmin, isAuthenticated }}>
       <div className="bg-night/40 min-h-screen">
         {clerkUser && (
           <CommunityTopBar
-            id={id!}
+            id={id}
             isCreator={isCreator}
+            isMember={isMember}
             isAdmin={isAdmin}
             memberCount={community?._count?.members}
             requestCount={community?._count?.requests}
@@ -77,7 +70,7 @@ const CommunityWrapper = () => {
 
         <Outlet />
 
-        {clerkUser && (
+        {clerkUser && isCreator && (
           <DeleteCommunityModal
             communityName={community.name}
             open={showDeleteModal}

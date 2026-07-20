@@ -12,15 +12,14 @@ export const CardSkeleton = () => (
 
 export const CommunitySkeleton = () => (
   <div className="min-h-screen bg-night px-4 py-8 animate-pulse">
-    <div className="mx-auto max-w-4xl space-y-4">
-      <div className="h-4 w-32 bg-slate rounded" />
+    <div className="mx-auto max-w-6xl space-y-4">
+      <div className="h-10 w-full bg-slate rounded" />
       <div className="h-64 w-full bg-slate rounded-2xl" />
       <div className="grid grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="h-20 bg-slate rounded-xl" />
         ))}
       </div>
-      <div className="h-10 bg-slate rounded-xl" />
       <div className="h-48 bg-slate rounded-xl" />
     </div>
   </div>

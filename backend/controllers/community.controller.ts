@@ -139,7 +139,16 @@ export const getCommunityById = async (
             requests: true,
           },
         },
-        events: true,
+        events: {
+          select: {
+            id: true,
+            title: true,
+            date: true,
+            location: true,
+            imageUrl: true,
+            subCategory: true,
+          }
+        },
         members: {
           select: {
             id: true,

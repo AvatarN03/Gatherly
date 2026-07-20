@@ -1,13 +1,21 @@
 import { useState } from "react";
 
-type Props = { 
+type DeleteCommunityModalProps = { 
   open: boolean; 
   isPending: boolean; 
   communityName: string;
   onCancel: () => void; 
-  onConfirm: () => void; };
+  onConfirm: () => void; 
+};
 
-const DeleteCommunityModal = ({ open, isPending, communityName, onCancel, onConfirm }: Props) => {
+const DeleteCommunityModal = (
+  { open, 
+    isPending, 
+    communityName, 
+    onCancel, 
+    onConfirm 
+  }: DeleteCommunityModalProps) => 
+  {
   const [confirmationText, setConfirmationText] = useState("");
 
   if (!open) return null;

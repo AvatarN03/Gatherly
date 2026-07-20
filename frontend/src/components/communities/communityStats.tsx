@@ -17,18 +17,18 @@ const CommunityStats = (props: Props) => (
     {STATS(props).map(({ label, value, icon: Icon }) => (
       <div
         key={label}
-        className="relative flex items-center gap-3 rounded-xl bg-forest-teal border border-[#182F3D] px-4 py-3.5 overflow-hidden"
+        className="relative flex items-center gap-3 rounded-md bg-lavender/80 border border-fog/20 px-4 py-3.5 overflow-hidden"
       >
         {/* faint icon watermark */}
-        <Icon className={`absolute -right-2 -bottom-2 w-14 h-14 opacity-5`} />
+        <Icon className={`absolute -right-2 -bottom-2 w-14 h-14 opacity-50`} />
 
-        <div className={`shrink-0 p-2 rounded-lg  border `}>
+        <div className={`shrink-0 p-2 rounded-lg  border bg-lavender text-deep-ocean`}>
           <Icon className={`w-4 h-4 `} />
         </div>
 
-        <div>
+        <div className="text-deep-ocean">
           <p className={`text-xl font-semibold`}>{value}</p>
-          <p className="text-mist font-semibold text-xs">{label}</p>
+          <p className=" font-semibold text-xs">{label}</p>
         </div>
       </div>
     ))}

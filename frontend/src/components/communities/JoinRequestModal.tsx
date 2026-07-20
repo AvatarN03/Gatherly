@@ -95,8 +95,11 @@ const JoinRequestModal = ({ isOpen, onClose, onSubmit, isPending }: JoinRequestM
         </p>
 
         <label
-          htmlFor="proof-upload"
-          className="flex flex-col items-center justify-center border-2 border-dashed border-cocoa rounded-lg p-6 cursor-pointer hover:bg-cocoa/10 transition-colors"
+          htmlFor={isPending ? undefined : "proof-upload"}
+          className={`flex flex-col items-center justify-center border-2 border-dashed border-cocoa rounded-lg p-6 transition-colors ${isPending
+              ? "opacity-60 cursor-not-allowed pointer-events-none"
+              : "cursor-pointer hover:bg-cocoa/10"
+            }`}
         >
           {preview ? (
 
@@ -126,6 +129,7 @@ const JoinRequestModal = ({ isOpen, onClose, onSubmit, isPending }: JoinRequestM
           accept="image/*"
           className="hidden"
           onChange={handleFileChange}
+          disabled={isPending}
         />
 
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}

@@ -48,7 +48,7 @@ const ConfirmModal = ({
       <div className="bg-lavender border-2 border-cocoa rounded-md w-full max-w-md p-6 relative">
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 cursor-pointer bg-slate/40  rounded-full p-2 text-fog"
+          className="absolute top-3 right-3 cursor-pointer bg-slate/40 hover:bg-slate/60  rounded-full p-2 text-fog"
         >
           <X className="w-5 h-5" />
         </button>
@@ -86,14 +86,14 @@ const ConfirmModal = ({
         <div className="flex gap-3">
           <button
             onClick={handleClose}
-            className="w-full py-2.5 text-xs tracking-widest rounded-lg border border-cocoa text-night hover:bg-cocoa/10"
+            className="w-full py-2.5 text-xs tracking-widest rounded-lg border border-cocoa text-night hover:bg-cocoa/10 cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className="w-full py-2.5 text-xs tracking-widest rounded-lg bg-red-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-700 transition-colors"
+            className="w-full py-2.5 text-xs tracking-widest rounded-lg bg-red-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-700 transition-colors cursor-pointer"
           >
             {isPending ? 'Processing...' : confirmButtonLabel}
           </button>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CalendarDays, Menu, Users, X, LogIn, SquarePen } from "lucide-react";
 import { SignInButton, SignUpButton, useAuth, UserButton, useUser } from "@clerk/react";
+import { HomeNavLinks } from "../constant";
 
 export const Navbar = () => {
   const { isSignedIn, isLoaded } = useAuth();
@@ -57,27 +58,15 @@ export const Navbar = () => {
             </div>
           </Link>
           <ul className="hidden md:flex gap-2 mx-2 text-slate-400">
-            <li className="hidden lg:block">
-              <a href="/#home" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Home
-
-              </a></li>
-            <li className="hidden lg:block">
-              <a href="/#features" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Features
-
-              </a></li>
-            <li className="hidden lg:block">
-              <a href="/#htw" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                HTW
-
-              </a></li>
-            <li>
-              <a href="/about" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                AboutUs
-
-              </a></li>
-            <li>
-              <a href="/contact" className="hover:text-lavender transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">                Contact
-
-              </a></li>
-
+            {
+              HomeNavLinks.map((navLink, idx) => (
+                <li key={idx} className={navLink.classes ?? ""} title={navLink.title}>
+                  <a href={navLink.link} className="hover:text-lavender tracking-wide transition-colors underline-hover text-xs p-2 rounded-sm bg-deep-ocean hover:bg-fog/10">
+                    {navLink.name}
+                  </a>
+                </li>
+              ))
+            }
           </ul>
         </div>
 
@@ -176,7 +165,7 @@ export const Navbar = () => {
 
                   <SignUpButton mode="modal">
                     <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-orchid/60 py-4 px-3 text-xl cursor-pointer text-mist transition-colors hover:text-white">
-                    <SquarePen className="w-6 h-6" />
+                      <SquarePen className="w-6 h-6" />
                       Sign Up
                     </button>
                   </SignUpButton>

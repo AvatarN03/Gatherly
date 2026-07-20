@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Users, ClipboardList, Edit, Trash } from 'lucide-react'
 
-type Props = {
+type CommunityTopBarProps = {
   id: string
   backLabel?: string
   backTo?: string
+  isMember: boolean
   isCreator: boolean
   isAdmin: boolean
   memberCount?: number
@@ -14,52 +15,60 @@ type Props = {
 
 const CommunityTopBar = ({
   id,
+  isMember,
   isCreator,
   isAdmin,
   memberCount,
   requestCount,
   onDelete,
-}: Props) => {
-  const navigate = useNavigate()
+}: CommunityTopBarProps) => {
+
+  const navigate = useNavigate();
+
+  const canSeeMembers = isMember || isAdmin || isCreator
+  const canSeeRequests = isAdmin || isCreator
+  const canSeeAnyAction = canSeeMembers || canSeeRequests || isCreator
 
   return (
     <div className="bg-night/90 border-b border-stone/50 px-4 py-3 flex justify-between items-center h-14">
       {/* Left: back nav */}
       <button
-        onClick={() => navigate(`/communities/${id}`)}
-        className="flex items-center gap-2 text-sm text-fog hover:text-white transition-colors cursor-pointer"
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 hover:gap-1.5 text-sm text-fog hover:text-white transition-all cursor-pointer underline-hover"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="hidden sm:inline">Back to community</span>
+        <span className="hidden sm:inline">Back</span>
       </button>
 
       {/* Right: role-gated actions */}
-      {(isCreator || isAdmin) && (
+      {canSeeAnyAction && (
         <div className="flex items-center gap-2">
 
-          {/* Members — admin/creator */}
-          <Link
-            to={`/communities/${id}/members`}
-            className="flex items-center gap-1.5 text-sm text-fog hover:text-white bg-stone/20 hover:bg-stone/30 px-3 py-2 rounded-lg transition-colors"
-          >
-            <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">Members</span>
-            {memberCount !== undefined && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-stone/50 text-[10px] text-mist font-bold">
-                {memberCount}
-              </span>
-            )}
-          </Link>
+          {/* Members — any member, admin, or creator */}
+          {canSeeMembers && (
+            <Link
+              to={`/communities/${id}/members`}
+              className="flex items-center gap-1.5 text-sm text-fog hover:text-white bg-stone/20 hover:bg-stone/30 px-3 py-2 rounded-lg transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Members</span>
+              {memberCount && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-stone/50 text-[10px] text-mist font-bold">
+                  {memberCount}
+                </span>
+              )}
+            </Link>
+          )}
 
-          {/* Requests — admin/owner only */}
-          {isAdmin && (
+          {/* Requests — admin/creator only */}
+          {canSeeRequests && (
             <Link
               to={`/communities/${id}/requests`}
               className="flex items-center gap-1.5 text-sm text-fog hover:text-white bg-stone/20 hover:bg-stone/30 px-3 py-2 rounded-lg transition-colors"
             >
               <ClipboardList className="w-4 h-4" />
               <span className="hidden sm:inline">Requests</span>
-              {!!requestCount && requestCount > 0 && (
+              {!!requestCount && (
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orchid text-[10px] text-white font-bold">
                   {requestCount}
                 </span>

@@ -4,10 +4,12 @@ import { SignInButton } from '@clerk/react'
 import { useCommunityContext } from '../../context/communityContext';
 
 import type { Community } from '../../types'
-import { ROLE_CONFIG } from '../../constant'
-import { useAuth } from '@clerk/react';
 
-type Props = {
+import { ROLE_CONFIG } from '../../constant'
+import { formatDate } from '../../lib/date';
+
+
+type CommunityHeroProps = {
   community: Community
   joinPending: boolean
   leavePending: boolean
@@ -21,16 +23,17 @@ const CommunityHero = ({
   community,
   joinPending, leavePending, withdrawPending,
   onJoin, onLeave, onWithdraw,
-}: Props) => {
-  const { userMembership, isCreator, userRequest } = useCommunityContext();
-  const { userId } = useAuth();
+}: CommunityHeroProps) => {
+
+  const { userMembership, isCreator, userRequest, isAuthenticated } = useCommunityContext();
+
   const role          = userMembership?.role;
   const requestStatus = userRequest?.status;
 
   const renderActions = () => {
 
     // ── 0. Guest — not signed in at all ───────────────────────
-    if (!userId) {
+    if (!isAuthenticated) {
       return (
         <SignInButton mode="modal">
           <button
@@ -44,7 +47,7 @@ const CommunityHero = ({
     }
 
     if (userMembership) {
-      const roleConfig = ROLE_CONFIG[role ?? 'MEMBER'] ?? ROLE_CONFIG['MEMBER']
+      const roleConfig = ROLE_CONFIG[role!]
 
       return (
         <div className="flex items-center gap-2 flex-wrap">
@@ -60,7 +63,7 @@ const CommunityHero = ({
             <button
               onClick={onLeave}
               disabled={leavePending}
-              className="flex items-center gap-2 bg-slate hover:bg-red-500/10 border border-[#70787A33] hover:border-red-500/30 text-stone hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 rounded-lg transition-all"
+              className="flex items-center gap-2 bg-slate hover:bg-red-500/10 border border-stone/60 hover:border-red-500/30 text-stone hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-1.5 rounded-lg transition-all cursor-pointer"
             >
               {leavePending
                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Leaving...</>
@@ -82,7 +85,7 @@ const CommunityHero = ({
         <button
           onClick={onWithdraw}
           disabled={withdrawPending}
-          className="flex items-center gap-2 bg-slate hover:bg-red-500/10 border border-[#70787A33] hover:border-red-500/30 text-stone hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 rounded-lg transition-all"
+          className="flex items-center gap-2 bg-slate hover:bg-red-500/10 border border-stone/60 hover:border-red-500/30 text-stone hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-1.5 rounded-lg transition-all cursor-pointer"
         >
           {withdrawPending
             ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Withdrawing...</>
@@ -102,7 +105,7 @@ const CommunityHero = ({
         <button
           onClick={onJoin}
           disabled={joinPending}
-          className="flex items-center gap-2 bg-slate hover:bg-orchid/10 border border-[#70787A33] hover:border-orchid/30 text-stone hover:text-orchid text-sm px-4 py-2 rounded-lg transition-all"
+          className="flex items-center gap-2 bg-slate hover:bg-orchid/10 border border-stone/60 hover:border-orchid/30 text-stone hover:text-orchid text-sm px-4 py-1.5 rounded-lg transition-all cursor-pointer"
         >
           {joinPending
             ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
@@ -140,7 +143,7 @@ const CommunityHero = ({
               {community.category}
             </span>
             <h1 className="text-2xl font-semibold text-mist leading-tight">{community.name}</h1>
-            <p className="text-fog text-sm mt-2 leading-relaxed max-w-3xl">{community.description}</p>
+            <p className="text-fog text-sm mt-2 leading-relaxed max-w-2xl line-clamp-3">{community.description}</p>
           </div>
 
           <div className="flex flex-wrap gap-4">
@@ -150,7 +153,7 @@ const CommunityHero = ({
             </span>
             <span className="flex items-center gap-1.5 text-xs text-lavender rounded-lg px-3 py-1.5 bg-lavender/10 border border-lavender/20">
               <Calendar className="w-3.5 h-3.5 text-lavender" />
-              Since {new Date(community.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              Since {formatDate(community.createdAt)}
             </span>
           </div>
 
