@@ -13,9 +13,9 @@ import CommunityWrapper from "./components/communities/CommunityWrapper";
 import Events from "./pages/events"
 import EventId from "./pages/events/event-id"
 import CreateEvent from "./pages/events/create-event"
-import EditEvent from "./pages/events/editEvent"
-import GetEventRegisters from "./pages/events/getEventRegisters"
-import { EventTeam } from "./pages/events/eventTeam";
+import EditEvent from "./pages/events/edit-event"
+import GetEventRegisters from "./pages/events/event-registration"
+import { EventTeam } from "./pages/events/event-team";
 import EventWrapper from "./components/events/EventWrapper";
 
 

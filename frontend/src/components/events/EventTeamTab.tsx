@@ -13,9 +13,9 @@ const EventTeamTab = ({ members }: { members: EventMember[] }) => {
   )
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-deep-ocean p-5 shadow-sm space-y-3">
+    <div className="rounded-xl border border-gray-200 bg-deep-ocean p-5 shadow-sm space-y-6">
       {members.map((member) => (
-        <div key={member.id} className="flex items-center justify-between">
+        <div key={member.id} className="flex items-center justify-between border-b border-0 last:border-b-0 border-gray-200 pb-3 last:pb-0">
           <div className="flex items-center gap-3">
             {member.user.imageUrl ? (
               <img

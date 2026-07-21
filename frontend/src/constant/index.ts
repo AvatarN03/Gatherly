@@ -31,7 +31,9 @@ import {
   ClipboardCheck,
   Inbox,
 } from "lucide-react";
-import type { MemberRoleHandler, NavSection } from "../types";
+
+import type {  CreateEvent, MemberRoleHandler, NavSection } from "../types";
+
 
 export const COMMUNITY_CATEGORIES = [
   { value: "General", label: "General" },
@@ -146,6 +148,35 @@ export const EVENT_SUBCATEGORIES: Record<
 };
 export type EventSubCategory =
   (typeof EVENT_SUBCATEGORIES)[CommunityCategory][number]["value"];
+
+export const HomeNavLinks = [
+  {
+    name:"Home",
+    title:"Home",
+    link:"/#home",
+    classes:"hidden lg:block"
+  },
+  {
+    name:"Features",
+    title:"Features",
+    link:"/#features",
+    classes:"hidden lg:block"
+  },
+  {
+    name:"HTW",
+    title:"How it Works",
+    link:"/#htw",
+    classes:"hidden lg:block"
+  },
+  {
+    name:"About",
+    link:"/about",
+  },
+  {
+    name:"Contact",
+    link:"/contact",
+  },
+]
 
 export const GATHERLY_FEATURES = [
   {
@@ -484,3 +515,21 @@ export const sections: NavSection[] = [
 ];
 
 export const COMMUNITY_ASSIGNABLE_ROLES = ['ADMIN', 'MEMBER'] as const satisfies readonly MemberRoleHandler[]
+
+
+export const INITIAL_FORM: Partial<CreateEvent> = {
+  title: "",
+  date: "",
+  time: "",
+  location: "",
+  description: "",
+  communityId: "",
+  category: "General",
+  subCategory: "",
+};
+
+export const ORGANISER_BADGE = {
+  label: "Organiser",
+  icon: Crown,
+  className: "text-purple-300 bg-purple-400/10 border-purple-400/20",
+};

@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ImagePlus, MapPin, Tag, AlignLeft, Users, ArrowLeft, Loader2, X, Pencil } from 'lucide-react'
+import {  MapPin, Tag, AlignLeft, Users, Loader2, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { Field } from '../../components/Field'
+import { ImageUpload } from '../../components/shared/ImageUpload'
+import { Error } from '../../components/Error'
 
 import { useCommunityContext } from '../../context/communityContext'
 
@@ -11,7 +13,6 @@ import { useUpdateCommunityMutation } from '../../hooks/useCommunities'
 
 import { COMMUNITY_CATEGORIES, inputClass } from '../../constant'
 
-import { resizeImage } from '../../lib/image'
 import { CommunityvalidateForm } from '../../lib/validation'
 
 import type { CreateCommunity } from '../../types'
@@ -25,7 +26,6 @@ const EditCommunity = () => {
 
   const [errors, setErrors] = useState<Partial<CreateCommunity>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CreateCommunity>({
     name: community.name,
@@ -43,20 +43,6 @@ const EditCommunity = () => {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
   }
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-     const file = e.target.files?.[0]
-     if (!file) return
-     const resized = await resizeImage(file)
-     setImageFile(resized)
-     setImagePreview(URL.createObjectURL(resized))
-   }
-
-  const clearImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-  }
-
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -88,27 +74,28 @@ const EditCommunity = () => {
     }
   }
 
-  const currentImage = imagePreview ?? community.imageUrl ?? null
+  const pendingPreviewUrl = useMemo(() => (imageFile ? URL.createObjectURL(imageFile) : null), [imageFile])
+  useEffect(() => {
+    return () => {
+      if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl)
+    }
+  }, [pendingPreviewUrl])
+
+  const currentImage = pendingPreviewUrl ?? community.imageUrl ?? null
 
   if (!community) return (
-    <div className="min-h-screen bg-night/50 flex items-center justify-center">
-      <div className="text-red-400 text-sm">Community not found.</div>
-    </div>
+   <Error
+      isRefetching={updateMutation.isPending}
+      handleRetry={() => navigate('/communities/my')}
+      text="Failed to load community details."
+   />
   )
 
   return (
     <div className="bg-night/50 py-10 px-4">
       <div className="max-w-5xl mx-auto">
 
-        {/* Back + heading */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate(`/communities/${community.id}`)}
-            className="flex items-center text-fog/50 hover:text-mist text-sm transition-colors mb-4 hover:underline underline-offset-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Community
-          </button>
           <h1 className="text-2xl font-medium text-mist">Edit Community</h1>
           <p className="text-fog/50 text-sm mt-1">Update your community's details and appearance</p>
         </div>
@@ -196,53 +183,13 @@ const EditCommunity = () => {
             {/* RIGHT column */}
             <div className="flex flex-col gap-6">
 
-              <Field label="Community Image">
-                {currentImage ? (
-                  <div className="relative rounded-xl overflow-hidden border border-orchid">
-                    <img
-                      src={currentImage}
-                      alt="Preview"
-                      className="w-full h-64 object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={clearImage}
-                      disabled={updateMutation.isPending}
-                      className="absolute top-3 right-3 p-1.5 bg-slate-900/80 hover:bg-slate-900 rounded-full text-mist cursor-pointer transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                    {/* Change image overlay button */}
-                    <label className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-orchid/80 hover:bg-slate-900 rounded-lg text-mist text-xs font-medium cursor-pointer transition-colors">
-                      <Pencil className="w-3 h-3" />
-                      Change
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                    {imageFile && (
-                      <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-900/60 text-fog/80 text-xs truncate">
-                        {imageFile.name}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate hover:border-orchid/50 rounded-xl cursor-pointer transition-colors group">
-                    <ImagePlus className="w-8 h-8 text-lavender group-hover:text-mist transition-colors mb-3" />
-                    <p className="text-mist text-sm font-medium">Click to upload image</p>
-                    <p className="text-fog text-xs mt-1 underline underline-offset-2">PNG, JPG up to 10 MB</p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </Field>
+             <ImageUpload
+                file={imageFile}
+                onChange={setImageFile}
+                disabled={updateMutation.isPending}
+                label="Community Image"
+                existingImageUrl={community.imageUrl ?? null}
+              />
 
               {/* Live preview card */}
               {formData.name && (

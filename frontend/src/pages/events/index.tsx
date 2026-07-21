@@ -20,7 +20,8 @@ const Events = () => {
     hasNextPage,
     fetchNextPage,
     refetch,
-    error,
+    isRefetching,
+    isError
   } = useEventsInfiniteQuery(debouncedSearch)
 
   const handleLoadMore = useCallback(() => {
@@ -41,7 +42,7 @@ const Events = () => {
     })
   }
 
-  if (error) return <Error text={"Failed to load events"} handleRetry={handleRetry} />
+  if (isError) return <Error isRefetching={isRefetching} text={"Failed to load events"} handleRetry={handleRetry} />
 
   return (
     <div className="min-h-screen bg-forest-teal/50 relative">

@@ -1,21 +1,23 @@
 // components/MemberProfileDialog.tsx
 import { X, Mail, Calendar, Shield } from 'lucide-react'
-import { ROLE_CONFIG } from '../constant'
-import type { Membership } from '../types'
+import { EVENT_ROLE_BADGES, ROLE_CONFIG } from '../constant'
+import type { MemberProfileDialogProps } from '../types'
 import { formatDate } from '../lib/date'
 
-interface MemberProfileDialogProps {
-  member: Membership
-  image?: string | null
-  onClose: () => void
-}
 
 export const MemberProfileDialog = ({
+  type,
   member,
   image,
   onClose,
 }: MemberProfileDialogProps) => {
-  const { label, icon: Icon, className } = ROLE_CONFIG[member.role]
+  const roleConfig =
+    type === "community"
+      ? ROLE_CONFIG[member.role]
+      : EVENT_ROLE_BADGES[member.role]
+
+  const { label, icon: Icon, className } = roleConfig
+  const joinedDate = type === 'event' ? member.assignedAt : member.createdAt;
 
   return (
     <div
@@ -83,7 +85,7 @@ export const MemberProfileDialog = ({
                 <Shield className="w-4 h-4 text-lavender" />
               </div>
               <span className="text-fog/80 border-2 rounded-full border-lavender px-2 py-1">
-                Joined {formatDate(member.createdAt)}
+                {`${type === 'event' ? 'Added to Team' : 'Joined Community'} on ${formatDate(joinedDate)}`}
               </span>
             </div>
 
@@ -98,8 +100,8 @@ export const MemberProfileDialog = ({
               </div>
             )}
 
-            {/* Add proofUrl if present */}
-            {member.proofUrl && (
+
+            {type === "community" && member.proofUrl && (
               <div className="mt-4 pt-4 border-t border-stone/20">
                 <a
                   href={member.proofUrl}

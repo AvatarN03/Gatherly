@@ -208,6 +208,7 @@ export const CommunityMembersPanel = () => {
       {/* Profile dialog - using reusable component */}
       {profileMember && (
         <MemberProfileDialog
+          type="community"
           member={profileMember}
           image={community?.imageUrl}
           onClose={() => setProfileMember(null)}

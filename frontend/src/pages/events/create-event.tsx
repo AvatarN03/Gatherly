@@ -1,48 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/react'
-import {
-  ArrowLeft,
-  Loader2,
-  X,
-  ImagePlus,
-  Users,
-  AlignLeft,
-  MapPin,
-  Tag,
-  UserCheck,
-} from 'lucide-react'
+import { Loader2, X, Users, AlignLeft, MapPin, Tag } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { Field } from '../../components/Field'
+import { ImageUpload } from '../../components/shared/ImageUpload'
 import { EventDatePicker } from '../../components/events/EventDatePicker'
 import { EventTimePicker } from '../../components/events/EventTimePicker'
+import type { TeamMember } from '../../components/events/EventMemberRow'
+import { EventTeamAssignment } from '../../components/events/EventTeamAssignment'
 
 import { useCreateEventMutation } from '../../hooks/useEvents'
 import { useMyCommunityQuery } from '../../hooks/useCommunities'
-import { useMembersQuery } from '../../hooks/useMembership'
 
 import { truncate } from '../../lib'
 import { EventValidateForm } from '../../lib/validation'
 
-import { EVENT_MEMBER_ROLES, type CreateEvent } from '../../types'
-
-import { EVENT_SUBCATEGORIES, inputClass } from '../../constant'
+import { EVENT_SUBCATEGORIES, INITIAL_FORM, inputClass } from '../../constant'
 import type { CommunityCategory } from '../../constant'
 
+import type { CreateEvent } from '../../types'
+
 const CreateEventPage = () => {
-  const navigate = useNavigate();
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  const [selectedMembers, setSelectedMembers] = useState<Array<{ userId: string; role: string }>>([]);
-  const [errors, setErrors] = useState<Partial<CreateEvent>>({});
-
-  const { data: communities = [], isLoading: communitiesLoading } = useMyCommunityQuery();
-
-  const { mutateAsync: createEvent, isPending, isError } = useCreateEventMutation();
-
-  const { user, isLoaded } = useUser();
+  const navigate = useNavigate()
+  const { user, isLoaded } = useUser()
 
   useEffect(() => {
     if (!user && isLoaded) {
@@ -51,66 +33,65 @@ const CreateEventPage = () => {
     }
   }, [user, isLoaded, navigate])
 
-  const [formData, setFormData] = useState<Partial<CreateEvent>>({
-    title: '',
-    date: '',
-    time: '',
-    location: '',
-    description: '',
-    communityId: '',
-    category: 'General',
-    subCategory: '',
-  })
+  const [formData, setFormData] = useState(INITIAL_FORM)
+  const [errors, setErrors] = useState<Partial<CreateEvent>>({})
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [selectedMembers, setSelectedMembers] = useState<TeamMember[]>([])
 
-  // Fetch members for the selected community
-  const { data: members = [], isLoading: membersLoading } = useMembersQuery(formData.communityId ?? '')
+  const { data: communities = [], isLoading: communitiesLoading } = useMyCommunityQuery()
+  const { mutateAsync: createEvent, isPending, isError } = useCreateEventMutation()
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
-  }
+  const selectedCommunity = useMemo(
+    () => communities.find((c) => c.id === formData.communityId),
+    [communities, formData.communityId]
+  )
 
-  const clearImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-  }
-
-  const selectedCommunity = communities.find((c) => c.id === formData.communityId)
-
-  const subcategories =
-    selectedCommunity && 'category' in selectedCommunity
-      ? EVENT_SUBCATEGORIES[selectedCommunity.category as CommunityCategory] ?? []
-      : []
+  const subcategories = useMemo(
+    () =>
+      selectedCommunity ? EVENT_SUBCATEGORIES[selectedCommunity.category as CommunityCategory] : [],
+    [selectedCommunity]
+  )
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
+
     if (errors[name as keyof CreateEvent]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
-    setFormData((prev) => {
-      if (name === 'communityId') {
-        const community = communities.find((c) => c.id === value)
-        setSelectedMembers([]) // reset team when community changes
-        return {
-          ...prev,
-          communityId: value,
-          category: (community?.category as CommunityCategory) ?? '',
-          subCategory: '',
-        }
-      }
-      return { ...prev, [name]: value }
-    })
+
+    if (name === 'communityId') {
+      // Side effects live outside the updater so they run exactly once per change.
+      setSelectedMembers([])
+      const community = communities.find((c) => c.id === value)
+      setFormData((prev) => ({
+        ...prev,
+        communityId: value,
+        category: (community?.category as CommunityCategory) ?? '',
+        subCategory: '',
+      }))
+      return
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const setDate = (date: string) => setFormData((prev) => ({ ...prev, date }))
+  const setTime = (time: string) => setFormData((prev) => ({ ...prev, time }))
+
+  const resetForm = () => {
+    setFormData(INITIAL_FORM)
+    setImageFile(null)
+    setSelectedMembers([])
+    setErrors({})
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({}); // Reset errors before validation
+    e.preventDefault()
+    setErrors({})
 
-    if (!EventValidateForm(formData, setErrors)) return;
+    if (!EventValidateForm(formData, setErrors)) return
 
     const payload = new FormData()
     payload.append('title', formData.title || '')
@@ -122,7 +103,6 @@ const CreateEventPage = () => {
     payload.append('category', formData.category || '')
     payload.append('subCategory', formData.subCategory || '')
     payload.append('members', JSON.stringify(selectedMembers))
-
     if (imageFile) payload.append('eventImage', imageFile)
 
     try {
@@ -131,31 +111,18 @@ const CreateEventPage = () => {
         success: 'Event created successfully!',
         error: 'Failed to create event',
       })
-      setFormData({});
-      setImageFile(null);
-      setImagePreview(null);
-      setSelectedMembers([]);
-      setErrors({});
-      navigate(`/events/${result.id}`); 
-    } catch (error) {
-      toast.error('Failed to create event. Please try again.')
-      console.error(error)
+      resetForm()
+      navigate(`/events/${result.id}`)
+    } catch (err) {
+      console.error(err)
     }
   }
 
   return (
     <div className="bg-night/50 py-10 px-4">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
 
-        {/* Back + heading */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate('/events')}
-            className="flex items-center text-fog/50 hover:text-mist text-sm transition-colors mb-4 hover:underline underline-offset-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Events
-          </button>
           <h1 className="text-2xl font-medium text-mist">Create an Event</h1>
           <p className="text-fog/50 text-sm mt-1">Fill in the details to set up your event</p>
         </div>
@@ -169,10 +136,8 @@ const CreateEventPage = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
             {/* LEFT column */}
             <div className="flex flex-col gap-6">
-
               <Field label="Community *" error={errors.communityId}>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
@@ -188,19 +153,12 @@ const CreateEventPage = () => {
                     disabled={isPending || communitiesLoading}
                     className={`${inputClass} pl-10 appearance-none pr-10 cursor-pointer truncate w-full max-w-2xl`}
                   >
-                    <option value="" >
-                      {communitiesLoading
-                        ? "Loading communities..."
-                        : "Select a community"}
+                    <option value="">
+                      {communitiesLoading ? 'Loading communities...' : 'Select a community'}
                     </option>
 
                     {communities.map((c) => (
-                      <option
-                        key={c.id}
-                        value={c.id}
-                        title={c.name}
-                        className="bg-slate-900 text-mist"
-                      >
+                      <option key={c.id} value={c.id} title={c.name} className="bg-slate-900 text-mist">
                         {truncate(c.name)}
                       </option>
                     ))}
@@ -208,7 +166,6 @@ const CreateEventPage = () => {
                 </div>
               </Field>
 
-              {/* Category — auto-filled, read-only */}
               {formData.category && (
                 <Field label="Community Category">
                   <div className="relative">
@@ -222,7 +179,6 @@ const CreateEventPage = () => {
                 </Field>
               )}
 
-              {/* Sub-category */}
               {subcategories.length > 0 && (
                 <Field label="Sub-Category *" error={errors.subCategory}>
                   <div className="relative">
@@ -260,20 +216,13 @@ const CreateEventPage = () => {
                 </div>
               </Field>
 
-              {/* Date + Time */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Date" error={errors.date}>
-                  <EventDatePicker
-                    value={formData.date}
-                    onChange={(date) => setFormData((prev) => ({ ...prev, date }))}
-                  />
+                  <EventDatePicker value={formData.date} onChange={setDate} />
                 </Field>
 
                 <Field label="Time" error={errors.time}>
-                  <EventTimePicker
-                    value={formData.time}
-                    onChange={(time) => setFormData((prev) => ({ ...prev, time }))}
-                  />
+                  <EventTimePicker value={formData.time} onChange={setTime} />
                 </Field>
               </div>
 
@@ -306,123 +255,25 @@ const CreateEventPage = () => {
                   />
                 </div>
               </Field>
-
             </div>
 
             {/* RIGHT column */}
             <div className="flex flex-col gap-6">
+              <ImageUpload
+                file={imageFile}
+                onChange={setImageFile}
+                disabled={isPending}
+                label="Event Image"
+              />
 
-              {/* Image upload */}
-              <Field label="Event Image">
-                {imagePreview ? (
-                  <div className="relative rounded-xl overflow-hidden border border-orchid">
-                    <img src={imagePreview} alt="Preview" className="w-full h-64 object-cover" />
-                    <button
-                      type="button"
-                      onClick={clearImage}
-                      disabled={isPending}
-                      className="absolute top-3 right-3 p-1.5 bg-slate-900/80 hover:bg-slate-900 rounded-full text-mist cursor-pointer transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                    <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-900/60 text-fog/80 text-xs truncate">
-                      {imageFile?.name}
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate hover:border-orchid/50 rounded-xl cursor-pointer transition-colors group">
-                    <ImagePlus className="w-8 h-8 text-lavender group-hover:text-mist transition-colors mb-3" />
-                    <p className="text-mist text-sm font-medium">Click to upload image</p>
-                    <p className="text-fog text-xs mt-1 underline underline-offset-2">PNG, JPG up to 10 MB</p>
-                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                  </label>
-                )}
-              </Field>
-
-              {/* Event Team — driven by useMembersQuery */}
               {formData.communityId && (
-                <div className="bg-deep-ocean/75 border border-stone rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <UserCheck className="w-4 h-4 text-lavender" />
-                    <p className="text-fog text-xs uppercase tracking-widest">Assign Event Team</p>
-                  </div>
-
-                  {membersLoading ? (
-                    <div className="flex items-center gap-2 py-4 justify-center text-fog/50 text-sm">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading members...
-                    </div>
-                  ) : members.length === 0 ? (
-                    <p className="text-fog/40 text-sm text-center py-4">No members in this community yet.</p>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      {members.map((member) => {
-                        const selected = selectedMembers.find((m) => m.userId === member.userId)
-                        
-                        return (
-                          <div
-                            key={member.userId}
-                            className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${selected
-                              ? 'border-orchid/40 bg-orchid/5'
-                              : 'border-slate-700/50 bg-slate-800/30'
-                              }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={member.user.imageUrl}
-                                alt={member.user.name}
-                                className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-600"
-                              />
-                              <div>
-                                <p className="text-mist text-sm font-medium">{member.user.name}</p>
-                                <p className="text-fog/50 text-xs">{member.role}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={!!selected}
-                                className="accent-orchid cursor-pointer"
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedMembers((prev) => [
-                                      ...prev,
-                                      { userId: member.userId, role: 'COORDINATOR' },
-                                    ])
-                                  } else {
-                                    setSelectedMembers((prev) =>
-                                      prev.filter((m) => m.userId !== member.userId)
-                                    )
-                                  }
-                                }}
-                              />
-                              <select
-                                disabled={!selected}
-                                value={selected?.role ?? 'COORDINATOR'}
-                                onChange={(e) => {
-                                  setSelectedMembers((prev) =>
-                                    prev.map((m) =>
-                                      m.userId === member.userId ? { ...m, role: e.target.value } : m
-                                    )
-                                  )
-                                }}
-                                className={`${inputClass} py-1 px-2 text-xs disabled:opacity-40 disabled:cursor-not-allowed`}
-                              >
-                                {EVENT_MEMBER_ROLES.map((r) => (
-                                  <option key={r} value={r}>
-                                    {r}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
+                <EventTeamAssignment
+                  communityId={formData.communityId}
+                  selectedMembers={selectedMembers}
+                  onChange={setSelectedMembers}
+                  disabled={isPending}
+                />
               )}
-
             </div>
           </div>
 

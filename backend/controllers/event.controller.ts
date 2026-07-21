@@ -210,8 +210,17 @@ export const getEventById = async (
         members: {
           select: {
             id: true,
-            user: true,
             role: true,
+            user:{
+              select: {
+                id:true,
+                name:true,
+                email:true,
+                imageUrl:true,
+                createdAt:true
+              }
+            },
+            assignedAt:true
           },
         },
         _count: {
@@ -504,7 +513,7 @@ export const unregisterFromEvent = async (
   }
 };
 
-// Add Event Member (Admin/Coordinator)
+// Add Event Member (Owner/Coordinator)
 
 export const addEventMember = async (
   req: Request<{ id: string }>,
@@ -539,10 +548,9 @@ export const addEventMember = async (
     const eventMembership = event.members[0];
 
     const isCommunityOwner = communityMembership?.role === "OWNER";
-    const isCommunityAdmin = communityMembership?.role === "ADMIN";
     const isEventCoordinator = eventMembership?.role === "COORDINATOR";
 
-    if (!isCommunityOwner && !isCommunityAdmin && !isEventCoordinator) {
+    if (!isCommunityOwner && !isEventCoordinator) {
       return res.status(403).json({
         error: "You are not authorized to manage event members.",
       });

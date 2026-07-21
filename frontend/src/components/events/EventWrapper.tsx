@@ -1,112 +1,85 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Outlet, useParams, useNavigate } from 'react-router-dom'
-import { useUser } from '@clerk/react'
+import { useAuth } from '@clerk/react'
 import { AlertTriangle } from 'lucide-react'
 
 import EventTopBar from './EventTopBar'
-import { EventSkeleton } from '../Skeleton'
+import { ItemSkeleton } from '../Skeleton'
 import DeleteEventModal from './DeleteEventModal'
 
 
 import { EventContext } from '../../context/eventContext'
 
 import { useEventQuery, useDeleteEventMutation } from '../../hooks/useEvents'
-import { useMembersQuery } from '../../hooks/useMembership'
+import { IsEmpty } from '../IsEmpty'
 
 const EventWrapper = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user: clerkUser, isLoaded } = useUser()
+  const { userId } = useAuth()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  const { data: event, isLoading, isError } = useEventQuery(id || '')
+  const { data: event, isLoading, isError } = useEventQuery(id);
   const deleteMutation = useDeleteEventMutation()
 
-  // Once the event loads we know its communityId — fetch community members
-  // to determine if the current user is OWNER/ADMIN there
-  const { data: communityMembers = [] } = useMembersQuery(
-    event?.communityId ?? ''
-  )
+  if (isLoading) return <ItemSkeleton />
 
-    useEffect(()=>{
-      if(!clerkUser && isLoaded)
-      {
-        navigate('/events');
-      }
-    }, [clerkUser, navigate, isLoaded])
-
-  if (isLoading) return <EventSkeleton />
-
-  if (isError || !event) {
+  if (!id || isError || !event) {
     return (
-      <div className="min-h-screen bg-night flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="p-4 bg-red-500/10 rounded-full">
-            <AlertTriangle className="w-8 h-8 text-red-400" />
-          </div>
-          <p className="text-mist font-medium">Event not found</p>
-          <button
-            onClick={() => navigate('/events')}
-            className="text-sm text-orchid hover:underline"
-          >
-            Back to events
-          </button>
-        </div>
-      </div>
+      <IsEmpty
+        text="Event not found"
+        href="/events"
+        link="Back to Events"
+        Icon={AlertTriangle}
+      />
     )
   }
 
   // ── Derive permissions 
-  const currentUserId = clerkUser?.id;
-
-  // Community-level membership
-  const communityMembership = communityMembers.find(
-    (m) => m.userId === currentUserId
-  )
-  const isCommunityAdmin =
-    communityMembership?.role === 'OWNER' ||
-    communityMembership?.role === 'ADMIN'
-
-  // Event-level team membership (from the event payload, already fetched)
-  const eventMembers = (event.members ?? []);
-  const eventMembership = eventMembers.find((m) => m.userId === currentUserId)
-
-  // Creator check
-  const isCreator = event.createdById === currentUserId
+  const isAuthenticated = !!userId;
+  const isCreator = event.createdById === userId;
+  const eventMembership = event.members?.find((m) => m.user.id === userId)
+  const isCoordinator =
+    eventMembership?.role === 'COORDINATOR'
 
   // ── Render 
   return (
     <EventContext.Provider
       value={{
         event,
-        communityMembership,
         eventMembership,
+        isEventMember: !!eventMembership,
         isCreator,
-        isCommunityAdmin,
+        isCoordinator,
+        isAuthenticated,
       }}
     >
-      <div className="bg-night/40 min-h-screen">
-        <EventTopBar
-          id={id!}
-          isCreator={isCreator}
-          isCommunityAdmin={isCommunityAdmin}
-          onDelete={isCreator ? () => setShowDeleteModal(true) : undefined}
-        />
-
+      <div className="bg-night/40 min-h-screen max-w-380 mx-auto">
+        {isAuthenticated && (
+          <EventTopBar
+            id={id!}
+            isCreator={isCreator}
+            isCoordinator={isCoordinator}
+            isEventMember={!!eventMembership}
+            onDelete={() => setShowDeleteModal(true)}
+          />
+        )}
         {/* Child routes render here */}
         <Outlet key={id} />
 
-        <DeleteEventModal
-          eventTitle={event.title}
-          open={showDeleteModal}
-          isPending={deleteMutation.isPending}
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={() =>
-            deleteMutation.mutate(id!, {
-              onSuccess: () => navigate('/events'),
-            })
-          }
-        />
+        {isCreator && (
+          <DeleteEventModal
+            eventTitle={event.title}
+            open={showDeleteModal}
+            isPending={deleteMutation.isPending}
+            onCancel={() => setShowDeleteModal(false)}
+            onConfirm={() =>
+              deleteMutation.mutate(id!, {
+                onSuccess: () => navigate('/events'),
+              })
+            }
+          />
+        )}
       </div>
     </EventContext.Provider>
   )

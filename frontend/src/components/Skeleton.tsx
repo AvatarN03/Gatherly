@@ -10,7 +10,7 @@ export const CardSkeleton = () => (
   </div>
 )
 
-export const CommunitySkeleton = () => (
+export const ItemSkeleton = () => (
   <div className="min-h-screen bg-night px-4 py-8 animate-pulse">
     <div className="mx-auto max-w-6xl space-y-4">
       <div className="h-10 w-full bg-slate rounded" />
@@ -25,9 +25,21 @@ export const CommunitySkeleton = () => (
   </div>
 )
 
-export const EventSkeleton = () => (
-  <div className="bg-night/50 min-h-screen flex items-center justify-center">
-    <div className="w-5 h-5 rounded-full border-2 border-orchid border-t-transparent animate-spin" />
-  </div>
-)
+export const EventTeamAssignmentSkeleton = () => (
+  <div className="space-y-3 animate-pulse">
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="h-14 bg-slate rounded-md relative p-2 flex justify-between items-center">
+        <div className="flex gap-3">
+          <div className="w-10 rounded-full aspect-square bg-night/40" />
+          <div className="space-y-2">
+            <div className="w-32 h-4 mb-1 bg-night/40" />
+            <div className="w-18 h-3 bg-night/40" />
+          </div>
+        </div>
 
+        <div className="w-40 h-full bg-orchid/10 delay-100" />
+      </div>
+    ))}
+  </div>
+
+)

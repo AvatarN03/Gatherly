@@ -1,6 +1,8 @@
 import { Tag, MapPin, CalendarDays } from "lucide-react";
-import type { Community } from "../../types";
+
 import { formatDate } from "../../lib/date";
+
+import type { Community } from "../../types";
 
 const OverviewTab = ({ community }: { community: Community }) => {
   const meta = [

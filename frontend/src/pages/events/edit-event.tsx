@@ -1,60 +1,51 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   Loader2,
   X,
-  ImagePlus,
   Users,
   AlignLeft,
   MapPin,
-  Tag,
-  UserCheck,
+  Tag
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { Field } from '../../components/Field'
+import { IsEmpty } from '../../components/IsEmpty'
+import { ImageUpload } from '../../components/shared/ImageUpload'
 import { EventDatePicker } from '../../components/events/EventDatePicker'
 import { EventTimePicker } from '../../components/events/EventTimePicker'
+import { EventTeamAssignment } from '../../components/events/EventTeamAssignment'
 
 import { useEventContext } from '../../context/eventContext'
 
 import { useUpdateEventMutation } from '../../hooks/useEvents'
-import { useMembersQuery } from '../../hooks/useMembership'
 
 import { EventValidateForm } from '../../lib/validation'
-
-import { EVENT_MEMBER_ROLES, type EventItem, type EventMemberRole } from '../../types'
 
 import { EVENT_SUBCATEGORIES, inputClass } from '../../constant'
 import type { CommunityCategory } from '../../constant'
 
+import { type EventItem } from '../../types'
 
 const EditEventPage = () => {
   const navigate = useNavigate()
   const { event, isCreator } = useEventContext();
 
-
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<EventItem>>({})
-
-  const existingImageUrl = event.imageUrl ?? null;
 
   const { mutateAsync: updateEvent, isPending, isError } = useUpdateEventMutation()
 
-  // Community is fixed for edit — just need the roster to assign roles from
-  const { data: members = [], isLoading: membersLoading } = useMembersQuery(event.communityId)
-
   const [formData, setFormData] = useState<Partial<EventItem>>({
-    title: event.title ?? '',
-    date: event.date ? event.date.split('T')[0] : '',
-    time: event.time ?? '',
-    location: event.location ?? '',
-    description: event.description ?? '',
+    title: event.title,
+    date: event.date,
+    time: event.time,
+    location: event.location,
+    description: event.description,
     communityId: event.communityId,
-    category: event.category ?? '',
-    subCategory: event.subCategory ?? '',
+    category: event.category,
+    subCategory: event.subCategory
   })
 
 
@@ -66,23 +57,16 @@ const EditEventPage = () => {
 
   if (!isCreator) {
     return (
-      <div className="min-h-screen bg-night flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <p className="text-mist font-medium">You don't have permission to edit this event.</p>
-          <button
-            onClick={() => navigate(`/events/${event.id}`)}
-            className="text-sm text-orchid hover:underline"
-          >
-            Back to event
-          </button>
-        </div>
-      </div>
+      <IsEmpty
+        text="You don't have permission to edit this event. Only the event creator can make changes."
+        href={`/events/${event.id}`}
+        link="Back to Event"
+        Icon={X}
+      />
     )
   }
 
-  const subcategories = formData.category
-    ? EVENT_SUBCATEGORIES[formData.category as CommunityCategory] ?? []
-    : []
+  const subcategories = EVENT_SUBCATEGORIES[(formData.category as CommunityCategory)] ??EVENT_SUBCATEGORIES['General']
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -92,21 +76,6 @@ const EditEventPage = () => {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
     setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  }
-
-  // Reverts to the event's current cover image rather than blanking it —
-  // there's already a real image saved, so "clear" here means "never mind,
-  // keep what was there" rather than "remove the cover image".
-  const clearStagedImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
   }
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -121,6 +90,7 @@ const EditEventPage = () => {
     payload.append('location', formData.location || '')
     payload.append('description', formData.description || '')
     payload.append('category', formData.category || '')
+    payload.append('communityId', formData.communityId || '')
     payload.append('subCategory', formData.subCategory || '')
     payload.append('members', JSON.stringify(selectedMembers))
 
@@ -140,8 +110,6 @@ const EditEventPage = () => {
     }
   }
 
-  const displayedImage = imagePreview ?? existingImageUrl;
-
   return (
     <div className="bg-night/50 py-10 px-4">
       <div className="max-w-5xl mx-auto">
@@ -149,13 +117,6 @@ const EditEventPage = () => {
         {/* Back + heading */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <button
-              onClick={() => navigate(`/events/${event.id}`)}
-              className="flex items-center text-fog/50 hover:text-mist text-sm transition-colors mb-4 hover:underline underline-offset-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back to Event
-            </button>
             <h1 className="text-2xl font-medium text-mist">Edit Event</h1>
             <p className="text-fog/50 text-sm mt-1">Update the details for this event</p>
           </div>
@@ -286,121 +247,24 @@ const EditEventPage = () => {
             </div>
 
             {/* RIGHT column */}
-            <div className="flex flex-col gap-6">
-
-              {/* Image upload */}
-              <Field label="Event Image">
-                {displayedImage ? (
-                  <div className="relative rounded-xl overflow-hidden border border-orchid">
-                    <img src={displayedImage} alt="Preview" className="w-full h-64 object-cover" />
-                    <button
-                      type="button"
-                      onClick={clearStagedImage}
-                      disabled={isPending || !imagePreview}
-                      className="absolute top-3 right-3 p-1.5 bg-slate-900/80 hover:bg-slate-900 rounded-full text-mist cursor-pointer transition-colors disabled:opacity-0"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                    <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-900/60 text-fog/80 text-xs truncate">
-                      {imageFile ? imageFile.name : 'Current cover image'}
-                    </div>
-                    <label className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-900/0 hover:bg-slate-900/20 cursor-pointer transition-colors opacity-0 hover:opacity-100 flex items-center justify-center">
-                      <span className="text-mist text-xs font-medium">Click to replace</span>
-                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                    </label>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate hover:border-orchid/50 rounded-xl cursor-pointer transition-colors group">
-                    <ImagePlus className="w-8 h-8 text-lavender group-hover:text-mist transition-colors mb-3" />
-                    <p className="text-mist text-sm font-medium">Click to upload image</p>
-                    <p className="text-fog text-xs mt-1 underline underline-offset-2">PNG, JPG up to 10 MB</p>
-                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                  </label>
-                )}
-              </Field>
-
-              {/* Event Team */}
-              <div className="bg-deep-ocean/75 border border-stone rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <UserCheck className="w-4 h-4 text-lavender" />
-                  <p className="text-fog text-xs uppercase tracking-widest">Assign Event Team</p>
-                </div>
-
-                {membersLoading ? (
-                  <div className="flex items-center gap-2 py-4 justify-center text-fog/50 text-sm">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading members...
-                  </div>
-                ) : members.length === 0 ? (
-                  <p className="text-fog/40 text-sm text-center py-4">No other members in this community yet.</p>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {members
-                      .map((member) => {
-                        const selected = selectedMembers.find((m) => m.userId === member.userId)
-                        return (
-                          <div
-                            key={member.userId}
-                            className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${selected
-                              ? 'border-orchid/40 bg-orchid/5'
-                              : 'border-slate-700/50 bg-slate-800/30'
-                              }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={member.user.imageUrl}
-                                alt={member.user.name}
-                                className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-600"
-                              />
-                              <div>
-                                <p className="text-mist text-sm font-medium">{member.user.name}</p>
-                                <p className="text-fog/50 text-xs">{member.role}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={!!selected}
-                                className="accent-orchid cursor-pointer"
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedMembers((prev) => [
-                                      ...prev,
-                                      { userId: member.userId, role: 'COORDINATOR' },
-                                    ])
-                                  } else {
-                                    setSelectedMembers((prev) =>
-                                      prev.filter((m) => m.userId !== member.userId)
-                                    )
-                                  }
-                                }}
-                              />
-                              <select
-                                disabled={!selected}
-                                value={selected?.role ?? 'COORDINATOR'}
-                                onChange={(e) => {
-                                  setSelectedMembers((prev) =>
-                                    prev.map((m) =>
-                                      m.userId === member.userId ? { ...m, role: e.target.value as EventMemberRole } : m
-                                    )
-                                  )
-                                }}
-                                className={`${inputClass} py-1 px-2 text-xs disabled:opacity-40 disabled:cursor-not-allowed`}
-                              >
-                                {EVENT_MEMBER_ROLES.map((r) => (
-                                  <option key={r} value={r}>
-                                    {r}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
+             <div className="flex flex-col gap-6">
+ 
+              <ImageUpload
+                file={imageFile}
+                onChange={setImageFile}
+                disabled={isPending}
+                label="Event Image"
+                existingImageUrl={event.imageUrl ?? null}
+              />
+ 
+              {/* Event Team — fetches its own roster via useMembersQuery(communityId) */}
+              <EventTeamAssignment
+                communityId={event.communityId}
+                selectedMembers={selectedMembers}
+                onChange={setSelectedMembers}
+                disabled={isPending}
+              />
+ 
             </div>
           </div>
 

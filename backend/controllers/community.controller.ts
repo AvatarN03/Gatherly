@@ -107,6 +107,15 @@ export const getMyCommunities = async (req: Request, res: Response) => {
     where: {
       createdById: user.id,
     },
+    select: {
+      id: true,
+      category: true,
+      createdAt: true,
+      name: true,
+      description: true,
+      imageUrl: true,
+      location: true,
+    },
     orderBy: {
       createdAt: "desc",
     },

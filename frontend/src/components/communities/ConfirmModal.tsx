@@ -5,12 +5,12 @@ import { AlertTriangle, X } from 'lucide-react'
 interface ConfirmModalProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => void
+  onConfirm: () => Promise<void> | void
   isPending: boolean
   title: string
   description: string
   warningNote?: string
-  confirmWord?: string 
+  confirmWord?: string
   confirmButtonLabel: string
 }
 
@@ -38,10 +38,13 @@ const ConfirmModal = ({
     onClose()
   }
 
-  const handleConfirm = () => {
-    if (isConfirmDisabled) return
-    onConfirm()
-  }
+  const handleConfirm = async () => {
+    if (isConfirmDisabled) return;
+
+    await onConfirm();
+
+    setInputValue("");
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">

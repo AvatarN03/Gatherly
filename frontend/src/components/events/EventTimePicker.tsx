@@ -1,19 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock, ChevronDown } from "lucide-react";
 import { inputClass } from "../../constant";
+import { formatLabel } from "../../lib/date";
 
-const TIMES = Array.from({ length: 48 }, (_, i) => {
-  const hour = Math.floor(i / 2);
+// Generate times from 06:00 (6 AM) to 21:00 (9 PM) in 30-minute increments
+const TIMES = Array.from({ length: 33 }, (_, i) => {
+  const hour = Math.floor(i / 2) + 6; // Start from 6 AM
   const minute = i % 2 ? "30" : "00";
   return `${hour.toString().padStart(2, "0")}:${minute}`;
 });
-
-const formatLabel = (time: string) => {
-  const [h, m] = time.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;
-};
 
 type Props = {
   value?: string;

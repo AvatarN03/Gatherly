@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { LayoutGrid, Users } from 'lucide-react'
+import { CalendarDays, LayoutGrid, UserCheck, Users } from 'lucide-react'
 
 import EventHero from '../../components/events/EventHero'
-import EventStats from '../../components/events/EventStats'
 import EventAboutTab from '../../components/events/OverViewTab'
 import EventTeamTab from '../../components/events/EventTeamTab'
-
+import Stats from '../../components/shared/Stats'
 
 import { useEventContext } from '../../context/eventContext'
 
@@ -14,22 +13,22 @@ import {
   useUnregisterFromEventMutation,
 } from '../../hooks/useEvents'
 
-import type { EventMember } from '../../types'
+import { formatDate } from '../../lib/date'
 
 const EventId = () => {
   const { event } = useEventContext();
 
   const [activeTab, setActiveTab] = useState<'about' | 'team'>('about')
 
-  const registerMutation   = useRegisterForEventMutation();
+  const registerMutation = useRegisterForEventMutation();
   const unregisterMutation = useUnregisterFromEventMutation();
 
-  const members       = (event.members?? []) as EventMember[]
+  const members = event.members;
 
   const isRegistered = event._count.registrations > 0
-  const isMutating   = registerMutation.isPending || unregisterMutation.isPending
+  const isMutating = registerMutation.isPending || unregisterMutation.isPending;
 
-  const handleJoin  = () => registerMutation.mutate(event.id);
+  const handleJoin = () => registerMutation.mutate(event.id);
   const handleLeave = () => unregisterMutation.mutate(event.id);
 
   return (
@@ -54,10 +53,25 @@ const EventId = () => {
             onLeave={handleLeave}
           />
 
-          <EventStats
-            memberCount={members.length}
-            registrationCount={event._count?.registrations || 0}
-            createdAt={event.createdAt}
+          <Stats
+            items={[
+              {
+                label: 'Team',
+                value: members.length,
+                icon: UserCheck,
+              },
+              {
+                label: 'Registered',
+                value: event._count.registrations,
+                icon: Users,
+              },
+              {
+                label: 'Posted',
+                value: formatDate(event.createdAt),
+                icon: CalendarDays,
+                small: true,
+              },
+            ]}
           />
 
           {/* Tabs */}
@@ -89,7 +103,7 @@ const EventId = () => {
 
             <div className="p-5">
               {activeTab === 'about' && <EventAboutTab event={event} />}
-              {activeTab === 'team'  && <EventTeamTab  members={members} />}
+              {activeTab === 'team' && <EventTeamTab members={members} />}
             </div>
           </div>
 

@@ -6,8 +6,8 @@ import { useUser } from '@clerk/react'
 
 import CommunityTopBar from './CommunityTopBar'
 import DeleteCommunityModal from './DeleteCommunityModal'
-import { CommunitySkeleton } from '../Skeleton'
 import { IsEmpty } from '../IsEmpty'
+import { ItemSkeleton } from '../Skeleton'
 
 import { useCommunityQuery, useDeleteCommunityMutation } from '../../hooks/useCommunities'
 import { useUserRequestQuery } from '../../hooks/useMembership'
@@ -40,7 +40,7 @@ const CommunityWrapper = () => {
 
   const deleteMutation = useDeleteCommunityMutation()
 
-  if (isLoading) return <CommunitySkeleton />
+  if (isLoading) return <ItemSkeleton />
 
   if (!id || isError || !community) return (    
     <IsEmpty 

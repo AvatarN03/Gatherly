@@ -35,7 +35,7 @@ export interface Community {
 
 export interface Membership {
   id: string
-  userId: string
+  userId?: string
   communityId: string
   role: CommunityRole
   createdAt: string
@@ -67,7 +67,7 @@ export type CreateEvent = {
   communityId: string
   imageUrl?: string
   imageFileId?: string
-  category: CommunityCategory | "General"
+  category: CommunityCategory
   subCategory: EventSubCategory | ""
   members: EventMember[]
 }
@@ -88,13 +88,30 @@ export type EventItem = {
   updatedAt: string
   createdBy?: User
   community?: Community
-  members?: EventMember[]
+  members: EventMember[]
   registrations?: EventRegistration[]
   _count: {
     registrations: number
   }
 }
 
+interface CommunityMemberProfileDialogProps {
+  type: "community"
+  member: Membership
+  image?: string | null
+  onClose: () => void
+}
+
+interface EventMemberProfileDialogProps {
+  type: "event"
+  member: EventMember
+  image?: string | null
+  onClose: () => void
+}
+
+export type MemberProfileDialogProps =
+  | CommunityMemberProfileDialogProps
+  | EventMemberProfileDialogProps
 
 
 export type CommunityRole = 'OWNER' | 'ADMIN' | 'MEMBER';

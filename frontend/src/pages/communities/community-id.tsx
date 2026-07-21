@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { LayoutGrid, CalendarDays } from 'lucide-react'
+import { LayoutGrid, CalendarDays, ClipboardList, Users } from 'lucide-react'
 
-import CommunityStats from '../../components/communities/communityStats'
-import OverviewTab from '../../components/communities/OverViewTabs'
+import CommunityHero from '../../components/communities/CommunityHeroo'
+import OverviewTab from '../../components/communities/OverViewTab'
 import EventsTab from '../../components/communities/EventsTab'
 import JoinRequestModal from '../../components/communities/JoinRequestModal'
 import ConfirmModal from '../../components/communities/ConfirmModal'
@@ -15,9 +15,7 @@ import {
 } from '../../hooks/useMembership'
 
 import { useCommunityContext } from '../../context/communityContext'
-import CommunityHero from '../../components/communities/communityHero'
-
-
+import Stats from '../../components/shared/Stats'
 
 const CommunityDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -43,7 +41,7 @@ const CommunityDetail = () => {
     )
   }
 
-    const handleWithdrawConfirm = () => {
+  const handleWithdrawConfirm = () => {
     withdrawMutation.mutate(id!, {
       onSuccess: () => setIsWithdrawModalOpen(false),
     })
@@ -82,10 +80,24 @@ const CommunityDetail = () => {
             onWithdraw={() => setIsWithdrawModalOpen(true)}
           />
 
-          <CommunityStats
-            memberCount={community?._count?.members ?? 0}
-            eventCount={community?.events?.length ?? 0}
-            requestCount={community?._count?.requests ?? 0}
+          <Stats
+            items={[
+              {
+                label: 'Members',
+                value: community?._count?.members ?? 0,
+                icon: Users,
+              },
+              {
+                label: 'Events',
+                value: community?.events?.length ?? 0,
+                icon: CalendarDays,
+              },
+              {
+                label: 'Requests',
+                value: community?._count?.requests ?? 0,
+                icon: ClipboardList,
+              },
+            ]}
           />
 
           <div className="bg-lavender/75 border-4 border-cocoa rounded-xl overflow-hidden">
@@ -133,7 +145,7 @@ const CommunityDetail = () => {
         isPending={joinMutation.isPending}
       />
 
-        <ConfirmModal
+      <ConfirmModal
         isOpen={isWithdrawModalOpen}
         onClose={() => setIsWithdrawModalOpen(false)}
         onConfirm={handleWithdrawConfirm}
